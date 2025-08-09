@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2e224b0a4ffb0d4cbe72c7e6b15a5fc, type: 3}
+  m_Name: Unit1PlaceableItem
+  m_EditorClassIdentifier: 
+  itemName: Unit1
+  itemImage: {fileID: 21300000, guid: 30ac3411d8556824493a3d7abb34e10b, type: 3}
+  itemPrefab: {fileID: 7154217283152218834, guid: 33727897a1bc5274eba894cc160dcef3, type: 3}
+  itemType: 2
+  terrainType: 0
+  unitHealth: 10
+  unitFaction: Team1

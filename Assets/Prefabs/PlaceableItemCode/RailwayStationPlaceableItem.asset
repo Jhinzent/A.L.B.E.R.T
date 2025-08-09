@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2e224b0a4ffb0d4cbe72c7e6b15a5fc, type: 3}
+  m_Name: RailwayStationPlaceableItem
+  m_EditorClassIdentifier: 
+  itemName: RailwayStation
+  itemImage: {fileID: 21300000, guid: a067a1ddf4d452b4898033501ed7ffdc, type: 3}
+  itemPrefab: {fileID: 6590043398161770882, guid: 4c5d9d3b9253b6243b465a7094a7c6bb, type: 3}
+  itemType: 0
+  terrainType: 0
+  unitHealth: 0
+  unitFaction: 
