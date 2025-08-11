@@ -149,7 +149,7 @@ GameObject:
   - component: {fileID: 4420148424389235210}
   - component: {fileID: 5490214658157964872}
   m_Layer: 5
-  m_Name: ReportUIButton
+  m_Name: GameMasterReportUIButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

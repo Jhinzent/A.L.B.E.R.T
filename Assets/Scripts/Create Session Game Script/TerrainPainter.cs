@@ -8,7 +8,7 @@ public class TerrainPainter : MonoBehaviour
     public Camera gameMasterCamera;
     private TerrainTile currentTile = null;
     private bool isTerrainSelected = false; // Flag to track if a terrain is selected
-    public GnerealSessionManager generalGameSessionmanager;
+    public GeneralSessionManager generalGameSessionmanager;
 
     void Update()
     {

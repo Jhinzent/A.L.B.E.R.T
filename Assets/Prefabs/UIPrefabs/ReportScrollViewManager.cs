@@ -5,14 +5,20 @@ using TMPro;
 
 public class ReportScrollViewManager : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private RectTransform contentPanel;
+    [Header("Main ScrollView UI References")]
+    [SerializeField] private RectTransform contentPanel; // Main scrollview's content
     [SerializeField] private GameObject reportItemPrefab;
     [SerializeField] private GameObject reportPopupPrefab;
     [SerializeField] private GameObject createReportButtonPrefab;
     [SerializeField] private Transform popupParent;
 
-    private readonly List<ReportEntry> reportEntries = new();
+    [Header("Extra Player ScrollViews")]
+    [Tooltip("Order matters! Index 0 -> Player 1, Index 1 -> Player 2, etc.")]
+    public List<RectTransform> playerScrollViewContents = new();
+
+    [SerializeField] private PlayerReportScrollViewManager playerManager; // Reference to Player Manager
+
+    private readonly List<ReportEntry> reportEntries = new(); // Main list
     private static GameObject currentlyOpenPopup;
     private static ReportEntry currentlyOpenEntry;
 
@@ -21,7 +27,7 @@ public class ReportScrollViewManager : MonoBehaviour
 
     private void Start()
     {
-        // Create the grayed-out "+" button at the bottom
+        // Create the "+" button in the main scrollview
         createButtonInstance = Instantiate(createReportButtonPrefab, contentPanel);
         Button createButton = createButtonInstance.GetComponent<Button>();
         if (createButton != null)
@@ -109,6 +115,7 @@ public class ReportScrollViewManager : MonoBehaviour
         popupScript.OnCloseRequested += CloseCurrentPopup;
         popupScript.OnDeleteRequested += () =>
         {
+            Debug.Log("[ReportScrollViewManager] Deleting report: " + entry.ReportName);
             if (entry.DisplayObject != null)
             {
                 Destroy(entry.DisplayObject);
@@ -118,7 +125,7 @@ public class ReportScrollViewManager : MonoBehaviour
         };
     }
 
-    private void CloseCurrentPopup()
+    public void CloseCurrentPopup()
     {
         if (currentlyOpenPopup != null)
         {
@@ -140,13 +147,66 @@ public class ReportScrollViewManager : MonoBehaviour
         };
     }
 
-    [System.Serializable]
-    public class ReportEntry
+    /// <summary>
+    /// Calls the Player Manager to fill the player scrollviews with the current report list,
+    /// then clears the main list and optionally destroys the create button.
+    /// </summary>
+    public void DistributeReportsToPlayers()
     {
-        public string ReportName;
-        public string Team;
-        public string ActionType;
-        public string Description;
-        public GameObject DisplayObject;
+        if (playerManager != null)
+        {
+            Debug.Log("[ReportScrollViewManager] Distributing reports to Player Manager: " + reportEntries);
+            playerManager.ReceiveReports(reportEntries);
+        }
+        else
+        {
+            Debug.LogWarning("[ReportScrollViewManager] Player Manager reference is missing!");
+        }
+
+        // Clear the main list and destroy the Create button instance (optional)
+        reportEntries.Clear();
+
+        if (createButtonInstance != null)
+        {
+            Destroy(createButtonInstance);
+            createButtonInstance = null;
+        }
+    }
+
+    /// <summary>
+    /// Deletes all reports currently in the main list and removes their UI elements.
+    /// </summary>
+    public void DeleteAllReports()
+    {
+        CloseCurrentPopup();
+
+        // Remove all children from the content panel except the create button
+        foreach (Transform child in contentPanel)
+        {
+            if (child.gameObject != createButtonInstance)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        // Clear the internal list and reset the counter
+        reportEntries.Clear();
+        reportCounter = 0;
+
+        // Recreate the "+" button if it no longer exists
+        if (createButtonInstance == null && createReportButtonPrefab != null)
+        {
+            createButtonInstance = Instantiate(createReportButtonPrefab, contentPanel);
+            Button createButton = createButtonInstance.GetComponent<Button>();
+            if (createButton != null)
+            {
+                createButton.onClick.AddListener(CreateNewReport);
+            }
+        }
+
+        // Ensure the create button is last in the hierarchy
+        createButtonInstance.transform.SetAsLastSibling();
+
+        Debug.Log("[ReportScrollViewManager] All report objects removed, create button ensured.");
     }
 }

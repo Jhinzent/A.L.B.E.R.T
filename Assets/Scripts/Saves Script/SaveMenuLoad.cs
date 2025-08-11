@@ -44,7 +44,7 @@ public class SaveMenu : MonoBehaviour
     private void OnSaveSelected(string saveName)
     {
         selectedSave = saveName;
-        Debug.Log("Selected save: " + saveName);
+        // Debug.Log("Selected save: " + saveName);
     }
 
     public void OnLoadButtonClick()

@@ -37,7 +37,7 @@ public class ObjectPlacer : MonoBehaviour
         if (teamList != null && teamList.teamFilterRadio != null)
         {
             teamList.teamFilterRadio.OnOptionSelected += UpdateTeamList;
-            Debug.Log("ObjectPlacer: Subscribed to teamFilterRadio.OnOptionSelected.");
+            // Debug.Log("ObjectPlacer: Subscribed to teamFilterRadio.OnOptionSelected.");
         }
         else
         {

@@ -3,54 +3,82 @@ using UnityEngine;
 
 public class PlayerMapLoader : MonoBehaviour
 {
-    public GameObject terrainTilePrefab; // Your map tile prefab (2D representation)
-    public Transform mapParent;          // Where to place the map (e.g., on a table)
-    public Vector2 tableSize = new Vector2(1.75f, 1f); // Table width/height ratio
+    public GameObject terrainTilePrefab;
+    public List<Transform> mapAnchors = new List<Transform>();  // Add this
+    public Transform mapParent;  // Will be assigned automatically
+    public Vector2 tableSize = new Vector2(1.75f, 1f);
     public string saveName;
     public GameMasterMapLoader gameMasterMapLoader;
+    public GeneralSessionManager generalSessionManager;
 
-    // Keep track of instantiated tiles so they can be deleted on reload
-    private readonly List<GameObject> instantiatedTiles = new();
+    private readonly List<List<GameObject>> playerMaps = new();
 
-    void Start()
+    public void CreatePlayerMaps(int numberOfPlayers)
     {
-        saveName = gameMasterMapLoader.getGameSessionSaveName();
-        LoadMapFromSave();
-    }
+        if (numberOfPlayers <= 0 || numberOfPlayers > mapAnchors.Count)
+        {
+            Debug.LogError($"[PlayerMapLoader] Invalid number of players: {numberOfPlayers}. Available anchors: {mapAnchors.Count}");
+            return;
+        }
 
-    private void LoadMapFromSave()
-    {
+        saveName = generalSessionManager.getGameSessionSaveName();
+        // Debug.Log($"[PlayerMapLoader] Creating {numberOfPlayers} player maps. Save name: {saveName}");
+
+        DeleteAllMaps();
+        
+        playerMaps.Clear();
+        for (int i = 0; i < numberOfPlayers; i++)
+        {
+            playerMaps.Add(new List<GameObject>());
+        }
+
         SaveData data = SaveSystem.LoadSession(saveName);
         if (data != null)
         {
-            BuildMap(data);
+            // Debug.Log($"[PlayerMapLoader] Save data found. Creating maps for {numberOfPlayers} players.");
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                BuildMapForPlayer(data, i);
+            }
         }
         else
         {
-            Debug.LogWarning($"No save data found for '{saveName}'");
+            Debug.LogWarning($"[PlayerMapLoader] No save data found for '{saveName}'");
         }
     }
 
-    // Public method to delete and reload the map
-    public void ReloadMap()
+    public void ReloadMaps()
     {
-        DeleteCurrentMap();
-        LoadMapFromSave();
-    }
-
-    // Deletes all current tiles from the map
-    private void DeleteCurrentMap()
-    {
-        foreach (GameObject tile in instantiatedTiles)
+        if (playerMaps.Count == 0)
         {
-            if (tile != null)
-                Destroy(tile);
+            Debug.LogWarning("[PlayerMapLoader] No maps to reload. Call CreatePlayerMaps first.");
+            return;
         }
-        instantiatedTiles.Clear();
+        
+        // Debug.Log($"[PlayerMapLoader] Reloading {playerMaps.Count} player maps...");
+        CreatePlayerMaps(playerMaps.Count);
     }
 
-    void BuildMap(SaveData data)
+    private void DeleteAllMaps()
     {
+        int totalTiles = 0;
+        foreach (var playerTiles in playerMaps)
+        {
+            totalTiles += playerTiles.Count;
+            foreach (GameObject tile in playerTiles)
+            {
+                if (tile != null)
+                    Destroy(tile);
+            }
+        }
+        // Debug.Log($"[PlayerMapLoader] Deleted {totalTiles} tiles from {playerMaps.Count} player maps.");
+        playerMaps.Clear();
+    }
+
+    void BuildMapForPlayer(SaveData data, int playerIndex)
+    {
+        // Debug.Log($"[PlayerMapLoader] Building 2D map for player {playerIndex} from save data...");
+        mapParent = mapAnchors[playerIndex];
         List<ObjectData> terrainObjects = new();
 
         foreach (ObjectData obj in data.objects)
@@ -61,13 +89,14 @@ public class PlayerMapLoader : MonoBehaviour
             }
         }
 
+        // Debug.Log($"[PlayerMapLoader] Found {terrainObjects.Count} terrain objects.");
+
         if (terrainObjects.Count == 0)
         {
-            Debug.LogWarning("No terrain tiles to display.");
+            Debug.LogWarning("[PlayerMapLoader] No terrain tiles to display.");
             return;
         }
 
-        // Step 1: Calculate map bounds
         Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
         Vector2 max = new Vector2(float.MinValue, float.MinValue);
 
@@ -79,8 +108,8 @@ public class PlayerMapLoader : MonoBehaviour
         }
 
         Vector2 mapSize = (max - min) + Vector2.one;
+        // Debug.Log($"[PlayerMapLoader] Calculated map bounds: min={min}, max={max}, size={mapSize}");
 
-        // Step 2: Adjust to fit aspect ratio
         float targetAspect = tableSize.x / tableSize.y;
         float width = mapSize.x;
         float height = mapSize.y;
@@ -101,12 +130,11 @@ public class PlayerMapLoader : MonoBehaviour
         }
 
         mapSize = max - min;
+        // Debug.Log($"[PlayerMapLoader] Adjusted map size to fit table: {mapSize}");
 
-        // Step 3: Set base values and prepare for scaling
-        float baseTileSize = 35f;  // Desired default tile size before scaling
-        float baseTileSpacing = 1f; // Desired default spacing before scaling
+        float baseTileSize = 35f;
+        float baseTileSpacing = 1f;
 
-        // Get actual size of the tile prefab
         float originalTileSize = 1f;
         Renderer renderer = terrainTilePrefab.GetComponent<Renderer>();
         if (renderer == null)
@@ -115,13 +143,14 @@ public class PlayerMapLoader : MonoBehaviour
         {
             originalTileSize = renderer.bounds.size.x;
         }
+        else
+        {
+            Debug.LogWarning("[PlayerMapLoader] No Renderer found on prefab. Default tile size used.");
+        }
 
-        // Calculate the base scale to make tile match 21.7f in world size
         float baseScaleFactor = baseTileSize / originalTileSize;
-
         float currentTileSpacing = baseTileSpacing;
 
-        // Step 4: Create terrain dictionary
         Dictionary<Vector2Int, ObjectData> terrainDict = new();
 
         foreach (ObjectData obj in terrainObjects)
@@ -129,13 +158,18 @@ public class PlayerMapLoader : MonoBehaviour
             Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(obj.position.x), Mathf.RoundToInt(obj.position.z));
             terrainDict[gridPos] = obj;
         }
+        // Debug.Log($"[PlayerMapLoader] Terrain dictionary created with {terrainDict.Count} entries.");
 
-        // Step 5: Instantiate tiles
         int gridWidth = Mathf.RoundToInt(mapSize.x);
         int gridHeight = Mathf.RoundToInt(mapSize.y);
 
-        Vector3 origin = mapParent.position - new Vector3((gridWidth - 1) * currentTileSpacing / 2f, 0f, (gridHeight - 1) * currentTileSpacing / 2f);
+        // Apply offset for each player's map
+        Vector3 origin = mapParent.position -
+    new Vector3((gridWidth - 1) * currentTileSpacing / 2f, 0f, (gridHeight - 1) * currentTileSpacing / 2f);
 
+        // Debug.Log($"[PlayerMapLoader] Origin of map for player {playerIndex}: {origin}, grid size: {gridWidth}x{gridHeight}");
+
+        int tilesSpawned = 0;
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
@@ -149,29 +183,24 @@ public class PlayerMapLoader : MonoBehaviour
                 {
                     Vector3 tilePos = origin + new Vector3(x * currentTileSpacing, 0f, y * currentTileSpacing);
                     GameObject tile = Instantiate(terrainTilePrefab, tilePos, Quaternion.identity, mapParent);
-
-                    // Scale the tile to fit map size
                     tile.transform.localScale = Vector3.one * baseScaleFactor;
 
                     Renderer tileRenderer = tile.GetComponent<Renderer>();
                     if (tileRenderer == null)
-                    {
                         tileRenderer = tile.GetComponentInChildren<Renderer>();
-                    }
 
                     if (tileRenderer != null)
-                    {
                         tileRenderer.material.color = TerrainTypeToColor(tileData.terrainType);
-                    }
                     else
-                    {
-                        Debug.LogWarning("Renderer missing on tile prefab!");
-                    }
+                        Debug.LogWarning("[PlayerMapLoader] Renderer missing on spawned tile!");
 
-                    instantiatedTiles.Add(tile); // Track instantiated tile
+                    playerMaps[playerIndex].Add(tile);
+                    tilesSpawned++;
                 }
             }
         }
+
+        // Debug.Log($"[PlayerMapLoader] Finished building map for player {playerIndex}. Total tiles spawned: {tilesSpawned}");
     }
 
     private Color TerrainTypeToColor(string terrainType)

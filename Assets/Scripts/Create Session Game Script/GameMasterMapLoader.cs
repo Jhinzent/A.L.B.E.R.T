@@ -10,9 +10,6 @@ public class GameMasterMapLoader : MonoBehaviour
     public ObjectPlacer objectPlacer;
     public LayerMask gameMasterMapLayer;
     private Dictionary<string, GameObject> prefabDictionary;
-    private string createSaveName;
-    private string loadSaveName;
-    private string gameSessioSaveName;
     public GameMasterMapManager terrainManager;
 
     void Awake()
@@ -26,75 +23,7 @@ public class GameMasterMapLoader : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        LoadSessionIfExists();
-    }
-
-    public string getCreateSaveName()
-    {
-        return createSaveName;
-    }
-
-    public string getLoadSaveName()
-    {
-        return loadSaveName;
-    }
-
-    public string getGameSessionSaveName()
-    {
-        return gameSessioSaveName;
-    }
-
-    private void LoadSessionIfExists()
-    {
-        string isLoaded = PlayerPrefs.GetString("EditSave", "");
-        string isCreated = PlayerPrefs.GetString("CreateSave", "");
-        string isGameSession = PlayerPrefs.GetString("StartSession", "");
-
-        if (!string.IsNullOrEmpty(isLoaded))
-        {
-            loadSaveName = isLoaded;
-            PlayerPrefs.SetString("CreateSave", "");
-            PlayerPrefs.SetString("EditSave", "");
-            PlayerPrefs.SetString("StartSession", "");
-            SaveData saveData = SaveSystem.LoadSession(isLoaded);
-            if (saveData != null)
-            {
-                LoadObjectsIntoScene(saveData);
-            }
-        }
-
-        if (!string.IsNullOrEmpty(isCreated))
-        {
-            createSaveName = isCreated;
-            PlayerPrefs.SetString("CreateSave", "");
-            PlayerPrefs.SetString("EditSave", "");
-            PlayerPrefs.SetString("StartSession", "");
-
-            terrainManager.GenerateGrid();
-        }
-
-        if (!string.IsNullOrEmpty(isGameSession))
-        {
-            gameSessioSaveName = isGameSession;
-            PlayerPrefs.SetString("CreateSave", "");
-            PlayerPrefs.SetString("EditSave", "");
-            PlayerPrefs.SetString("StartSession", "");
-
-            SaveData saveData = SaveSystem.LoadSession(isGameSession);
-
-            if (saveData != null)
-            {
-                LoadObjectsIntoScene(saveData, new Vector3(0, 0, 0));
-            }
-
-            objectPlacer.setGroundLayerForPlacement(gameMasterMapLayer);
-
-        }
-    }
-
-    private void LoadObjectsIntoScene(SaveData saveData, Vector3? positionOffset = null)
+    public void LoadObjectsIntoScene(SaveData saveData, Vector3? positionOffset = null)
     {
         List<TerrainTile> terrainTiles = new List<TerrainTile>();
         Vector3 offset = positionOffset ?? Vector3.zero;

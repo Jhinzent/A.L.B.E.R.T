@@ -20,7 +20,8 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public Button saveButtonPrefab; // Prefab for save buttons
     public Button loadSessionButton; // Button to load selected save
     public Button cancelButton; // Button to cancel loading
-    public GameMasterMapLoader sessionLoader;
+    public GameMasterMapLoader gameMasterMapLoader;
+    public GeneralSessionManager generalSessionManager;
 
     public GameObject mapEditingPanel;
     public GameObject teamEditingPanel;
@@ -128,9 +129,9 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
 
     public void hitSaveButton()
     {
-        string currentLoadedSave = sessionLoader.getLoadSaveName();
-        string currentCreatedSave = sessionLoader.getCreateSaveName();
-        string currentGameSessionSave = sessionLoader.getGameSessionSaveName();
+        string currentLoadedSave = generalSessionManager.getLoadSaveName();
+        string currentCreatedSave = generalSessionManager.getCreateSaveName();
+        string currentGameSessionSave = generalSessionManager.getGameSessionSaveName();
 
         if (!string.IsNullOrEmpty(currentLoadedSave))
         {
