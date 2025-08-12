@@ -144,12 +144,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1822494988492027909}
   - component: {fileID: 2548103476180646355}
-  - component: {fileID: 4495666301074242252}
   - component: {fileID: 4307363512134007847}
   - component: {fileID: 4420148424389235210}
   - component: {fileID: 5490214658157964872}
+  - component: {fileID: -5563216402404627940}
   m_Layer: 5
-  m_Name: GameMasterReportUIButton
+  m_Name: GameMasterReportIncomingUIButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -183,21 +183,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6123162723042394051}
   m_CullTransparentMesh: 1
---- !u!114 &4495666301074242252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6123162723042394051}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26e28b233a8a0764f90be5a6afe196bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OriginManager: {fileID: 0}
-  Unit: {fileID: 0}
-  ActionDescription: 
 --- !u!114 &4307363512134007847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -296,3 +281,15 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &-5563216402404627940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6123162723042394051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81ac926f36417d41981b5de53697187, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

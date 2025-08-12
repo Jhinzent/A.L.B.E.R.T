@@ -38,39 +38,45 @@ public class ReportScrollViewManager : MonoBehaviour
     }
 
     private void CreateNewReport()
+{
+    reportCounter++;
+
+    ReportEntry entry = new ReportEntry
     {
-        reportCounter++;
+        ReportName = $"Report {reportCounter}",
+        Team = "Player 1",
+        ActionType = "Action",
+        Description = ""
+    };
 
-        ReportEntry entry = new ReportEntry
-        {
-            ReportName = $"Report {reportCounter}",
-            Team = "Player 1",
-            ActionType = "Action",
-            Description = ""
-        };
+    GameObject entryObj = Instantiate(reportItemPrefab, contentPanel);
+    int insertIndex = Mathf.Max(0, contentPanel.childCount - 1); // Before the create button
+    entryObj.transform.SetSiblingIndex(insertIndex);
 
-        GameObject entryObj = Instantiate(reportItemPrefab, contentPanel);
-        int insertIndex = Mathf.Max(0, contentPanel.childCount - 1); // Before the create button
-        entryObj.transform.SetSiblingIndex(insertIndex);
-
-        TMP_Text text = entryObj.GetComponentInChildren<TMP_Text>();
-        if (text != null)
-        {
-            text.text = entry.ReportName;
-            text.color = GetTeamColor(entry.Team);
-        }
-
-        Button button = entryObj.GetComponent<Button>();
-        if (button != null)
-        {
-            button.onClick.AddListener(() => OnReportClicked(entry));
-        }
-
-        entry.DisplayObject = entryObj;
-        reportEntries.Insert(0, entry);
-
-        OpenPopupForEntry(entry);
+    TMP_Text text = entryObj.GetComponentInChildren<TMP_Text>();
+    if (text != null)
+    {
+        text.text = entry.ReportName;
+        text.color = GetTeamColor(entry.Team);
     }
+
+    Button button = entryObj.GetComponent<Button>();
+    if (button != null)
+    {
+        button.onClick.AddListener(() => OnReportClicked(entry));
+    }
+
+    entry.DisplayObject = entryObj;
+    reportEntries.Insert(0, entry);
+
+    // **Make sure the create button is always last in the hierarchy**
+    if (createButtonInstance != null)
+    {
+        createButtonInstance.transform.SetAsLastSibling();
+    }
+
+    OpenPopupForEntry(entry);
+}
 
     private void OnReportClicked(ReportEntry entry)
     {
@@ -177,36 +183,36 @@ public class ReportScrollViewManager : MonoBehaviour
     /// Deletes all reports currently in the main list and removes their UI elements.
     /// </summary>
     public void DeleteAllReports()
+{
+    CloseCurrentPopup();
+
+    // Remove all children from the content panel except the create button
+    foreach (Transform child in contentPanel)
     {
-        CloseCurrentPopup();
-
-        // Remove all children from the content panel except the create button
-        foreach (Transform child in contentPanel)
+        if (child.gameObject != createButtonInstance)
         {
-            if (child.gameObject != createButtonInstance)
-            {
-                Destroy(child.gameObject);
-            }
+            Destroy(child.gameObject);
         }
-
-        // Clear the internal list and reset the counter
-        reportEntries.Clear();
-        reportCounter = 0;
-
-        // Recreate the "+" button if it no longer exists
-        if (createButtonInstance == null && createReportButtonPrefab != null)
-        {
-            createButtonInstance = Instantiate(createReportButtonPrefab, contentPanel);
-            Button createButton = createButtonInstance.GetComponent<Button>();
-            if (createButton != null)
-            {
-                createButton.onClick.AddListener(CreateNewReport);
-            }
-        }
-
-        // Ensure the create button is last in the hierarchy
-        createButtonInstance.transform.SetAsLastSibling();
-
-        Debug.Log("[ReportScrollViewManager] All report objects removed, create button ensured.");
     }
+
+    // Clear the internal list and reset the counter
+    reportEntries.Clear();
+    reportCounter = 0;
+
+    // Recreate the "+" button if it no longer exists
+    if (createButtonInstance == null && createReportButtonPrefab != null)
+    {
+        createButtonInstance = Instantiate(createReportButtonPrefab, contentPanel);
+        Button createButton = createButtonInstance.GetComponent<Button>();
+        if (createButton != null)
+        {
+            createButton.onClick.AddListener(CreateNewReport);
+        }
+    }
+
+    // Ensure the create button is last in the hierarchy
+    createButtonInstance.transform.SetAsLastSibling();
+
+    Debug.Log("[ReportScrollViewManager] All report objects removed, create button ensured.");
+}
 }

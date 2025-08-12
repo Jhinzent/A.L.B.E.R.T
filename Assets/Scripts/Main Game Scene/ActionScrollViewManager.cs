@@ -296,4 +296,29 @@ public class ActionScrollViewManager : MonoBehaviour
     {
         return RectTransformUtility.RectangleContainsScreenPoint(viewportB, screenPoint);
     }
+
+    public void RemoveAllActions()
+{
+    // Close any open popup first
+    CloseCurrentPopup();
+
+    // Helper to clear a list and its objects
+    void ClearList(List<ActionEntry> list)
+    {
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var entry = list[i];
+            if (entry.DisplayObject != null)
+                Destroy(entry.DisplayObject);
+
+            if (entry.Unit != null)
+                entry.Unit.OnDestroyed -= HandleUnitDestroyed;
+
+            list.RemoveAt(i);
+        }
+    }
+
+    ClearList(actionEntriesA);
+    ClearList(actionEntriesB);
+}
 }

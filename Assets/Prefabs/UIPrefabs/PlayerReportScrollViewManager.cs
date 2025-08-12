@@ -103,7 +103,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
         if (popupScript != null)
         {
             Debug.Log("[PlayerManager] Initializing ReportPopupPlayer...");
-            popupScript.Initialize(entry.Description, entry.Team, entry.ActionType);
+            popupScript.Initialize(entry.Description, entry.ActionType);
 
             // Subscribe to the close event
             popupScript.OnCloseRequested += CloseCurrentPopup;

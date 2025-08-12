@@ -25,6 +25,9 @@ public class GeneralSessionManager : MonoBehaviour
     public RadioButtonUI teamChangeRadioButton;
     public ReportScrollViewManager reportScrollViewManager;
     public PlayerReportScrollViewManager playerReportScrollViewManager;
+    public ReportScrollViewManagerGameMasterIncoming reportScrollViewManagerGameMasterIncoming;
+    public PlayerReportOutputScrollViewManager playerReportOutputScrollViewManager;
+    public ActionScrollViewManager actionScrollViewManager;
 
     [Header("Debug / Testing")]
     public bool allowKeyboardAdvance = true; // press Space to switch to next
@@ -280,6 +283,13 @@ public class GeneralSessionManager : MonoBehaviour
                 Debug.LogError("[GSM] GameMaster camera or canvas is not assigned!");
                 return;
             }
+
+            actionScrollViewManager.RemoveAllActions();
+
+            reportScrollViewManagerGameMasterIncoming.LoadAllReportsFromPlayerReportOutputManager();
+
+            playerReportOutputScrollViewManager.DeleteAllReportsForPlayer(0);
+            playerReportOutputScrollViewManager.CloseCurrentPopup();
 
             GameMasterCamera.enabled = true;
             ToggleAudioListener(GameMasterCamera, true);
