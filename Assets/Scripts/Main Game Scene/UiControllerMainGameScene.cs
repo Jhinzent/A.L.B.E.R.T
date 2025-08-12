@@ -30,20 +30,34 @@ public class UiControllerMainGameScene : MonoBehaviour
         drawScrollView.SetActive(false);
     }
 
-    public void drawTerrainScrollView()
+    public void DrawTerrainScrollView()
     {
-        bool wasActive = drawScrollView.activeSelf;
-        HideAllScrollViews();  // Hide both scroll views first
-        // Toggle the drawScrollView only if it was not active before
-        drawScrollView.SetActive(!wasActive);
+        // If itemScrollView is open, close it before opening drawScrollView
+        if (itemScrollView.activeSelf)
+        {
+            itemScrollView.SetActive(false);
+            drawScrollView.SetActive(true);
+        }
+        else
+        {
+            // Toggle drawScrollView
+            drawScrollView.SetActive(!drawScrollView.activeSelf);
+        }
     }
 
-    public void toggleItemScrollView()
+    public void ToggleItemScrollView()
     {
-        bool wasActive = itemScrollView.activeSelf;
-        HideAllScrollViews();  // Hide both scroll views first
-        // Toggle the itemScrollView only if it was not active before
-        itemScrollView.SetActive(!wasActive);
+        // If drawScrollView is open, close it before opening itemScrollView
+        if (drawScrollView.activeSelf)
+        {
+            drawScrollView.SetActive(false);
+            itemScrollView.SetActive(true);
+        }
+        else
+        {
+            // Toggle itemScrollView
+            itemScrollView.SetActive(!itemScrollView.activeSelf);
+        }
     }
 
     void Update()
@@ -55,17 +69,17 @@ public class UiControllerMainGameScene : MonoBehaviour
         }
     }
 
-    public void hitResumeButton()
+    public void HitResumeButton()
     {
         HideMenu();
     }
 
-    public void hitSettingsButton()
+    public void HitSettingsButton()
     {
         Debug.Log("Settings Open...");
     }
 
-    public void hitMainMenuButton()
+    public void HitMainMenuButton()
     {
         SceneManager.LoadScene("MainMenuScene");
         IsMenuActive = false;

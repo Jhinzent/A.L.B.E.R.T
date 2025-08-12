@@ -29,6 +29,9 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
     private List<ReportEntry> reportEntriesUnseen = new();
     private List<ReportEntry> reportEntriesSeen = new();
 
+    // NEW: keep manager-owned display objects per report, so multiple managers can have their own UI
+    private readonly Dictionary<ReportEntry, List<GameObject>> reportDisplayObjects = new();
+
     private static GameObject currentlyOpenPopup;
     private static ReportEntry currentlyOpenEntry;
 
@@ -49,6 +52,7 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
         List<ReportEntry> allReports = playerReportOutputScrollViewManager.GetAllReports();
 
+        // Debug.Log($"[LoadAllReports] Got {allReports?.Count ?? 0} reports from PlayerReportOutputScrollViewManager.");
         foreach (var report in allReports)
         {
             AddReport(report, toUnseen: true);
@@ -57,30 +61,56 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
     public void AddReport(ReportEntry report, bool toUnseen)
     {
-        Transform targetContent = toUnseen ? contentPanelUnseen : contentPanelSeen;
-        var targetList = toUnseen ? reportEntriesUnseen : reportEntriesSeen;
+        // Debug.Log($"[AddReport] Called with ReportName='{report?.ReportName ?? "NULL"}', Team='{report?.Team ?? "NULL"}', toUnseen={toUnseen}");
 
-        // Prevent duplicates: check if report already added
-        if (targetList.Contains(report))
+        if (report == null)
         {
-            Debug.LogWarning("Report already added to the list!");
+            Debug.LogError("[AddReport] Report is NULL! Aborting.");
             return;
         }
 
+        Transform targetContent = toUnseen ? contentPanelUnseen : contentPanelSeen;
+        var targetList = toUnseen ? reportEntriesUnseen : reportEntriesSeen;
+
+        // Debug.Log($"[AddReport] Target content panel = '{targetContent?.name}', Target list size before add = {targetList.Count}");
+
+        // Prevent duplicates in this manager's list
+        if (targetList.Contains(report))
+        {
+            Debug.LogWarning($"[AddReport] Duplicate detected in THIS list for '{report.ReportName}'. Skipping.");
+            return;
+        }
+
+        if (reportButtonPrefab == null)
+        {
+            Debug.LogError("[AddReport] reportButtonPrefab is NULL! Cannot create UI element.");
+            return;
+        }
+
+        // Instantiate a new UI object for this manager (do NOT touch report.DisplayObject)
         GameObject entryObj = Instantiate(reportButtonPrefab, targetContent);
+        // bug.Log($"[AddReport] Instantiated new report button for '{report.ReportName}' under '{targetContent?.name}'.");
 
         TMP_Text text = entryObj.GetComponentInChildren<TMP_Text>();
         if (text != null)
         {
             text.text = $"{report.ReportName}";
             text.color = GetPlayerColor(report.Team);
+            // Debug.Log($"[AddReport] Set text='{report.ReportName}', color='{text.color}'.");
+        }
+        else
+        {
+            Debug.LogWarning("[AddReport] No TMP_Text found in prefab!");
         }
 
         Button button = entryObj.GetComponent<Button>();
         if (button != null)
         {
+            // Ensure we don't stack listeners if somehow reusing UI (we're creating new ones though)
+            button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
+                // Debug.Log($"[AddReport-ButtonClick] '{report.ReportName}' clicked.");
                 if (currentlyOpenEntry == report)
                 {
                     CloseCurrentPopup();
@@ -91,31 +121,39 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
                 }
             });
         }
-
-        DraggableReport draggable = entryObj.GetComponent<DraggableReport>();
-        if (draggable != null)
-        {
-            draggable.OriginManager = this;
-            draggable.ReportData = report;
-        }
         else
         {
-            Debug.LogWarning("DraggableReport component missing on reportButtonPrefab!");
+            Debug.LogWarning("[AddReport] No Button component found!");
         }
 
-        // Assign display object and add to list
-        if (report.DisplayObject != null)
+        // Add DraggableReport component if missing, then assign its data
+        DraggableReport draggable = entryObj.GetComponent<DraggableReport>();
+        if (draggable == null)
         {
-            // Defensive: Destroy old displayObject if any
-            Destroy(report.DisplayObject);
+            draggable = entryObj.AddComponent<DraggableReport>();
+            // Debug.Log("[AddReport] DraggableReport component added.");
         }
-        report.DisplayObject = entryObj;
+        draggable.OriginManager = this;
+        draggable.ReportData = report;
+        // Debug.Log("[AddReport] DraggableReport assigned.");
 
+        // Register this manager's UI instance for the report
+        if (!reportDisplayObjects.TryGetValue(report, out var list))
+        {
+            list = new List<GameObject>();
+            reportDisplayObjects[report] = list;
+        }
+        list.Add(entryObj);
+        // Debug.Log($"[AddReport] Registered display object for '{report.ReportName}' (manager-owned instances = {list.Count}).");
+
+        // Add to this manager's logical list
         targetList.Add(report);
+        // Debug.Log($"[AddReport] Added '{report.ReportName}' to list. New size = {targetList.Count}");
 
         // Subscribe safely to avoid multiple subscriptions
         report.OnDestroyed -= HandleReportDestroyed;
         report.OnDestroyed += HandleReportDestroyed;
+        // Debug.Log($"[AddReport] Subscribed to OnDestroyed for '{report.ReportName}'.");
     }
 
     private void TryOpenReportPopup(ReportEntry report)
@@ -161,24 +199,30 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
     public void RemoveReport(ReportEntry report)
     {
+        // Debug.Log($"[RemoveReport] Attempting to remove report '{report?.ReportName ?? "NULL"}' from this manager.");
+
         bool removed = RemoveReportFromList(report, reportEntriesUnseen, contentPanelUnseen)
                     || RemoveReportFromList(report, reportEntriesSeen, contentPanelSeen);
 
         if (removed)
         {
+            //  Debug.Log($"[RemoveReport] '{report.ReportName}' removed from at least one list in this manager.");
+
+            // Unsubscribe event (manager no longer cares)
             report.OnDestroyed -= HandleReportDestroyed;
 
-            if (report.DisplayObject != null)
-            {
-                Destroy(report.DisplayObject);
-                report.DisplayObject = null;
-            }
+            // We do NOT touch report.DisplayObject here (other managers might use it).
+            // We cleaned up manager-owned UI in RemoveReportFromList already.
 
             // If the removed report was the currently open one, close popup
             if (currentlyOpenEntry == report)
             {
                 CloseCurrentPopup();
             }
+        }
+        else
+        {
+            Debug.LogWarning($"[RemoveReport] Report '{report?.ReportName ?? "NULL"}' was not found in this manager's lists.");
         }
     }
 
@@ -188,11 +232,12 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         {
             if (list[i] == report)
             {
-                if (report.DisplayObject != null)
-                    Destroy(report.DisplayObject);
+                // Destroy only this manager's UI instances for this report
+                DestroyManagerOwnedDisplayObjects(report);
 
                 list.RemoveAt(i);
-                report.DisplayObject = null;
+
+                // Debug.Log($"[RemoveReportFromList] Removed report '{report.ReportName}' from list. Remaining in list = {list.Count}");
                 return true;
             }
         }
@@ -211,10 +256,13 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         {
             if (list[i].Team == team)
             {
-                if (list[i].DisplayObject != null)
-                    Destroy(list[i].DisplayObject);
+                var report = list[i];
+                // Debug.Log($"[RemoveReportsForTeamFromList] Removing '{report.ReportName}' for team '{team}' from this manager.");
 
-                list[i].OnDestroyed -= HandleReportDestroyed;
+                // Destroy manager-owned UI
+                DestroyManagerOwnedDisplayObjects(report);
+
+                report.OnDestroyed -= HandleReportDestroyed;
                 list.RemoveAt(i);
             }
         }
@@ -230,14 +278,24 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
     {
         foreach (var entry in list)
         {
-            if (entry == report && entry.DisplayObject != null)
+            if (entry == report)
             {
-                TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
-                if (text != null)
+                // Update model
+                entry.ReportName = newName;
+
+                // Update all manager-owned UI instances for this report
+                if (reportDisplayObjects.TryGetValue(report, out var objs))
                 {
-                    entry.ReportName = newName;
-                    text.text = $"{newName} - {entry.ActionType}";
-                    text.color = GetPlayerColor(entry.Team);
+                    foreach (var obj in objs)
+                    {
+                        if (obj == null) continue;
+                        TMP_Text text = obj.GetComponentInChildren<TMP_Text>();
+                        if (text != null)
+                        {
+                            text.text = $"{newName}";
+                            text.color = GetPlayerColor(entry.Team);
+                        }
+                    }
                 }
             }
         }
@@ -254,18 +312,19 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
     public void ClearAllEntries()
     {
+        // Debug.Log("[ClearAllEntries] Clearing unseen entries and manager-owned UI.");
         foreach (var report in reportEntriesUnseen)
         {
-            if (report.DisplayObject != null)
-                Destroy(report.DisplayObject);
+            // Destroy manager-owned UI instances
+            DestroyManagerOwnedDisplayObjects(report);
             report.OnDestroyed -= HandleReportDestroyed;
         }
         reportEntriesUnseen.Clear();
 
+        // Debug.Log("[ClearAllEntries] Clearing seen entries and manager-owned UI.");
         foreach (var report in reportEntriesSeen)
         {
-            if (report.DisplayObject != null)
-                Destroy(report.DisplayObject);
+            DestroyManagerOwnedDisplayObjects(report);
             report.OnDestroyed -= HandleReportDestroyed;
         }
         reportEntriesSeen.Clear();
@@ -285,69 +344,86 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
     public void AddExistingEntry(ReportEntry report, bool toUnseen)
     {
-        // Remove from both lists first to avoid duplicates
+        // Remove from both lists first to avoid duplicates in this manager
         reportEntriesUnseen.Remove(report);
         reportEntriesSeen.Remove(report);
 
         Transform targetContent = toUnseen ? contentPanelUnseen : contentPanelSeen;
         var targetList = toUnseen ? reportEntriesUnseen : reportEntriesSeen;
 
-        if (report.DisplayObject == null)
+        if (reportButtonPrefab == null)
         {
-            GameObject entryObj = Instantiate(reportButtonPrefab, targetContent);
+            Debug.LogError("[AddExistingEntry] reportButtonPrefab is NULL! Cannot create UI element.");
+            return;
+        }
 
-            TMP_Text text = entryObj.GetComponentInChildren<TMP_Text>();
-            if (text != null)
-            {
-                text.text = $"{report.ReportName} - {report.ActionType}";
-                text.color = GetPlayerColor(report.Team);
-            }
+        // Always create a manager-owned UI instance (don't rely on report.DisplayObject)
+        GameObject entryObj = Instantiate(reportButtonPrefab, targetContent);
 
-            Button button = entryObj.GetComponent<Button>();
-            if (button != null)
+        TMP_Text text = entryObj.GetComponentInChildren<TMP_Text>();
+        if (text != null)
+        {
+            text.text = $"{report.ReportName}";
+            text.color = GetPlayerColor(report.Team);
+        }
+
+        Button button = entryObj.GetComponent<Button>();
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() =>
             {
-                button.onClick.AddListener(() =>
+                if (currentlyOpenEntry == report)
                 {
-                    if (currentlyOpenEntry == report)
-                    {
-                        CloseCurrentPopup();
-                    }
-                    else
-                    {
-                        TryOpenReportPopup(report);
-                    }
-                });
-            }
-
-            DraggableReport draggable = entryObj.GetComponent<DraggableReport>();
-            if (draggable != null)
-            {
-                draggable.OriginManager = this;
-                draggable.ReportData = report;
-            }
-            else
-            {
-                Debug.LogWarning("DraggableReport component missing on reportButtonPrefab!");
-            }
-
-            report.DisplayObject = entryObj;
-
-            report.OnDestroyed -= HandleReportDestroyed;
-            report.OnDestroyed += HandleReportDestroyed;
+                    CloseCurrentPopup();
+                }
+                else
+                {
+                    TryOpenReportPopup(report);
+                }
+            });
         }
-        else
+
+        DraggableReport draggable = entryObj.GetComponent<DraggableReport>();
+        if (draggable == null)
         {
-            report.DisplayObject.transform.SetParent(targetContent, false);
-
-            TMP_Text text = report.DisplayObject.GetComponentInChildren<TMP_Text>();
-            if (text != null)
-            {
-                text.text = $"{report.ReportName} - {report.ActionType}";
-                text.color = GetPlayerColor(report.Team);
-            }
+            draggable = entryObj.AddComponent<DraggableReport>();
+            // Debug.Log("[AddExistingEntry] DraggableReport component added.");
         }
+        draggable.OriginManager = this;
+        draggable.ReportData = report;
+
+        // register manager-owned instance
+        if (!reportDisplayObjects.TryGetValue(report, out var list))
+        {
+            list = new List<GameObject>();
+            reportDisplayObjects[report] = list;
+        }
+        list.Add(entryObj);
+
+        report.OnDestroyed -= HandleReportDestroyed;
+        report.OnDestroyed += HandleReportDestroyed;
 
         targetList.Add(report);
+        // Debug.Log($"[AddExistingEntry] Added existing report '{report.ReportName}' to this manager. Manager-owned instances = {list.Count}");
+    }
+
+    private void DestroyManagerOwnedDisplayObjects(ReportEntry report)
+    {
+        if (report == null) return;
+
+        if (reportDisplayObjects.TryGetValue(report, out var objs))
+        {
+            // Debug.Log($"[DestroyManagerOwnedDisplayObjects] Destroying {objs.Count} manager-owned UI objects for '{report.ReportName}'.");
+            foreach (var obj in objs)
+            {
+                if (obj != null)
+                {
+                    Destroy(obj);
+                }
+            }
+            reportDisplayObjects.Remove(report);
+        }
     }
 
     private Color GetPlayerColor(string team)

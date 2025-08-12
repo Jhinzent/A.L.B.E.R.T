@@ -23,7 +23,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
 
     public void ReceiveReports(List<ReportEntry> reportsFromGameMaster)
     {
-        Debug.Log($"[PlayerManager] Receiving {reportsFromGameMaster.Count} reports from GameMaster.");
+        // Debug.Log($"[PlayerManager] Receiving {reportsFromGameMaster.Count} reports from GameMaster.");
 
         ClearAll();
 
@@ -33,7 +33,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
 
             if (playerIndex >= 0 && playerIndex < playerScrollViewContents.Count)
             {
-                Debug.Log($"[PlayerManager] Creating entry for {entry.ReportName} in Player {playerIndex + 1}'s scrollview.");
+                // Debug.Log($"[PlayerManager] Creating entry for {entry.ReportName} in Player {playerIndex + 1}'s scrollview.");
 
                 GameObject entryObj = Instantiate(playerReportItemPrefab, playerScrollViewContents[playerIndex]);
 
@@ -47,7 +47,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
                 Button button = entryObj.GetComponent<Button>();
                 if (button != null)
                 {
-                    Debug.Log($"[PlayerManager] Adding click listener to {entry.ReportName}");
+                    // Debug.Log($"[PlayerManager] Adding click listener to {entry.ReportName}");
                     int capturedIndex = playerIndex;
                     button.onClick.AddListener(() => OnReportClicked(entry, capturedIndex));
                 }
@@ -68,16 +68,16 @@ public class PlayerReportScrollViewManager : MonoBehaviour
 
     private void OnReportClicked(ReportEntry entry, int playerIndex)
     {
-        Debug.Log($"[PlayerManager] Clicked on {entry.ReportName} for Player {playerIndex + 1}");
+        // Debug.Log($"[PlayerManager] Clicked on {entry.ReportName} for Player {playerIndex + 1}");
 
         if (currentlyOpenEntry == entry)
         {
-            Debug.Log("[PlayerManager] Closing currently open popup.");
+           //  Debug.Log("[PlayerManager] Closing currently open popup.");
             CloseCurrentPopup();
         }
         else
         {
-            Debug.Log("[PlayerManager] Opening popup for clicked entry.");
+            // Debug.Log("[PlayerManager] Opening popup for clicked entry.");
             OpenPopupForEntry(entry, playerIndex);
         }
     }
@@ -86,7 +86,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
     {
         CloseCurrentPopup();
 
-        Debug.Log($"[PlayerManager] Instantiating popup for {entry.ReportName} in Player {playerIndex + 1}'s scene.");
+        // Debug.Log($"[PlayerManager] Instantiating popup for {entry.ReportName} in Player {playerIndex + 1}'s scene.");
 
         Transform parent = popupParents.Count > playerIndex ? popupParents[playerIndex] : transform;
         if (parent == null)
@@ -102,7 +102,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
         var popupScript = popupInstance.GetComponent<ReportPopupPlayer>();
         if (popupScript != null)
         {
-            Debug.Log("[PlayerManager] Initializing ReportPopupPlayer...");
+            // Debug.Log("[PlayerManager] Initializing ReportPopupPlayer...");
             popupScript.Initialize(entry.Description, entry.ActionType);
 
             // Subscribe to the close event
@@ -118,7 +118,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
     {
         if (currentlyOpenPopup != null)
         {
-            Debug.Log("[PlayerManager] Destroying current popup.");
+            // Debug.Log("[PlayerManager] Destroying current popup.");
             Destroy(currentlyOpenPopup);
             currentlyOpenPopup = null;
             currentlyOpenEntry = null;
@@ -127,7 +127,7 @@ public class PlayerReportScrollViewManager : MonoBehaviour
 
     private void ClearAll()
     {
-        Debug.Log("[PlayerManager] Clearing all current entries.");
+        // Debug.Log("[PlayerManager] Clearing all current entries.");
         foreach (var entry in playerReportEntries)
         {
             if (entry.DisplayObject != null)

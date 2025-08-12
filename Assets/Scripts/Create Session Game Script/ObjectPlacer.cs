@@ -60,21 +60,42 @@ public class ObjectPlacer : MonoBehaviour
 
     public void SetSelectedPrefab(GameObject prefab, PlaceableItem.ItemType itemType, string existingName = null, string existingTeam = "Neutral")
     {
+        Debug.Log($"[ObjectPlacer] SetSelectedPrefab called.");
+        Debug.Log($"[ObjectPlacer] Prefab received: {(prefab != null ? prefab.name : "NULL")}");
+        Debug.Log($"[ObjectPlacer] ItemType received: {itemType}");
+        Debug.Log($"[ObjectPlacer] ExistingName received: {(string.IsNullOrEmpty(existingName) ? "NULL/Empty" : existingName)}");
+        Debug.Log($"[ObjectPlacer] ExistingTeam received: {existingTeam}");
+
         selectedPrefab = prefab;
         selectedItemType = itemType;
 
-        if (previewObject != null) Destroy(previewObject);
+        if (previewObject != null)
+        {
+            Debug.Log("[ObjectPlacer] Destroying previous preview object.");
+            Destroy(previewObject);
+        }
+
         previewObject = Instantiate(selectedPrefab);
+        Debug.Log($"[ObjectPlacer] Preview object instantiated: {previewObject.name}");
 
         Collider col = previewObject.GetComponent<Collider>();
-        if (col != null) col.enabled = false;
+        if (col != null)
+        {
+            col.enabled = false;
+            Debug.Log("[ObjectPlacer] Disabled collider on preview object.");
+        }
 
         SetMaterialTransparent(previewObject);
+        Debug.Log("[ObjectPlacer] Applied transparent material to preview object.");
+
         isPlacing = true;
+        Debug.Log("[ObjectPlacer] isPlacing set to TRUE.");
 
         var instance = previewObject.GetComponent<PlaceableItemInstance>() ?? previewObject.AddComponent<PlaceableItemInstance>();
         instance.Init(prefab, itemType, existingName ?? "NewObject");
         instance.setTeam(existingTeam);
+
+        Debug.Log($"[ObjectPlacer] Preview object initialized with Name='{instance.getName()}', Team='{instance.getTeam()}', ItemType={instance.ItemType}");
     }
 
     public void SetRelocating(bool relocating)

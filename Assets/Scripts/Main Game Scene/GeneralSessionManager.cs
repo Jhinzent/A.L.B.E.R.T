@@ -57,7 +57,7 @@ public class GeneralSessionManager : MonoBehaviour
 
         if (playerAmmount > availablePlayers)
         {
-            Debug.LogWarning($"[GSM] Requested playerAmmount = {playerAmmount}, but only {availablePlayers} player camera/canvas pairs are assigned. Clamping to {availablePlayers}.");
+            // Debug.LogWarning($"[GSM] Requested playerAmmount = {playerAmmount}, but only {availablePlayers} player camera/canvas pairs are assigned. Clamping to {availablePlayers}.");
             playerAmmount = availablePlayers;
         }
 
@@ -209,7 +209,7 @@ public class GeneralSessionManager : MonoBehaviour
     {
         if (allowKeyboardAdvance && Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("[GSM] Space pressed - advancing to next");
+            // Debug.Log("[GSM] Space pressed - advancing to next");
             SwitchToNext();
         }
     }
@@ -367,7 +367,7 @@ public class GeneralSessionManager : MonoBehaviour
         }
 
         // Debug.Log($"[GSM] Now in Player {index} view. (playerListIndex = {playerListIndex})");
-        LogState();
+        // LogState();
     }
 
     private void DisableAll()
@@ -439,7 +439,7 @@ public class GeneralSessionManager : MonoBehaviour
     // Optional: public UI hook for a "Next" button
     public void OnNextButtonPressed()
     {
-        Debug.Log("[GSM] OnNextButtonPressed() called");
+        // Debug.Log("[GSM] OnNextButtonPressed() called");
         SwitchToNext();
     }
 
