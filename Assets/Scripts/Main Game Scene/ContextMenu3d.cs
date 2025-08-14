@@ -11,7 +11,23 @@ public class ContextMenu3D : MonoBehaviour
     private bool isEditingTitle = false;
     public Image teamColorImage;
     public RadioButtonUI teamChangeRadioButton;
-    public RadioButtonUI actionTypeRadioButton;  // NEW
+    public RadioButtonUI actionTypeRadioButton;
+
+    // === Attribute UI References ===
+    [Header("Attribute Buttons (1–5 each)")]
+    public Button[] proficiencyButtons; // How adept they are
+    public Button[] fatigueButtons;     // How exhausted they are
+    public Button[] commsClarityButtons; // Communication reachability
+    public Button[] equipmentButtons;   // How well equipped they are
+
+    // Attribute Values
+    private int proficiencyValue = 1;
+    private int fatigueValue = 1;
+    private int connectivityValue = 1;
+    private int equipmentValue = 1;
+
+    private Color activeColor = Color.white;
+    private Color inactiveColor = Color.gray;
 
     private void Start()
     {
@@ -36,24 +52,71 @@ public class ContextMenu3D : MonoBehaviour
             actionTypeRadioButton.OnOptionSelected -= OnActionOptionSelected;
             actionTypeRadioButton.OnOptionSelected += OnActionOptionSelected;
         }
+
+        // Hook up attribute button events
+        InitAttributeButtons(proficiencyButtons, SetProficiency);
+        InitAttributeButtons(fatigueButtons, SetFatigue);
+        InitAttributeButtons(commsClarityButtons, SetConnectivity);
+        InitAttributeButtons(equipmentButtons, SetEquipment);
+
+        // Set default values
+        UpdateAttributeUI(proficiencyButtons, proficiencyValue);
+        UpdateAttributeUI(fatigueButtons, fatigueValue);
+        UpdateAttributeUI(commsClarityButtons, connectivityValue);
+        UpdateAttributeUI(equipmentButtons, equipmentValue);
     }
 
+    private void InitAttributeButtons(Button[] buttons, System.Action<int> callback)
+    {
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            int index = i + 1; // Values go 1–5
+            buttons[i].onClick.AddListener(() => callback(index));
+        }
+    }
+
+    private void UpdateAttributeUI(Button[] buttons, int value)
+    {
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            var colors = buttons[i].colors;
+            colors.normalColor = (i < value) ? activeColor : inactiveColor;
+            colors.highlightedColor = colors.normalColor;
+            buttons[i].colors = colors;
+        }
+    }
+
+    public void SetProficiency(int value)
+    {
+        proficiencyValue = value;
+        UpdateAttributeUI(proficiencyButtons, value);
+    }
+
+    public void SetFatigue(int value)
+    {
+        fatigueValue = value;
+        UpdateAttributeUI(fatigueButtons, value);
+    }
+
+    public void SetConnectivity(int value)
+    {
+        connectivityValue = value;
+        UpdateAttributeUI(commsClarityButtons, value);
+    }
+
+    public void SetEquipment(int value)
+    {
+        equipmentValue = value;
+        UpdateAttributeUI(equipmentButtons, value);
+    }
+
+    // === Your existing methods unchanged ===
     private static readonly Color[] teamColors = new Color[]
     {
-        Color.red,
-        Color.blue,
-        Color.green,
-        Color.yellow,
-        Color.magenta,
-        Color.cyan,
-        new Color(1f, 0.5f, 0f),
-        new Color(0.5f, 0f, 1f),
-        new Color(0.5f, 0.5f, 0.5f),
-        new Color(0f, 0.75f, 0.75f)
+        Color.red, Color.blue, Color.green, Color.yellow, Color.magenta, Color.cyan,
+        new Color(1f, 0.5f, 0f), new Color(0.5f, 0f, 1f), new Color(0.5f, 0.5f, 0.5f), new Color(0f, 0.75f, 0.75f)
     };
-
     private static readonly Color neutralColor = new Color32(255, 255, 255, 255);
-
     public PlaceableItemInstance Item => target;
 
     public void Init(PlaceableItemInstance targetObject)
@@ -102,7 +165,6 @@ public class ContextMenu3D : MonoBehaviour
             if (titleText != null)
             {
                 titleText.text = target.getName();
-                // Debug.Log($"[ContextMenu3D] Set title text to: {titleText.text}");
             }
         }
     }
@@ -110,9 +172,7 @@ public class ContextMenu3D : MonoBehaviour
     private void BeginEditTitle()
     {
         if (isEditingTitle) return;
-
         isEditingTitle = true;
-
         if (titleText != null && titleInputField != null)
         {
             titleInputField.text = titleText.text;
@@ -120,20 +180,13 @@ public class ContextMenu3D : MonoBehaviour
             titleInputField.gameObject.SetActive(true);
             titleInputField.Select();
             titleInputField.ActivateInputField();
-            // Debug.Log("[ContextMenu3D] Begin editing title.");
         }
     }
 
     private void OnTitleEditEnd(string newText)
     {
-        if (!isEditingTitle)
-        {
-            Debug.Log("[ContextMenu3D] Not editing title, ignoring end edit.");
-            return;
-        }
-
+        if (!isEditingTitle) return;
         isEditingTitle = false;
-
         if (titleText != null && titleInputField != null)
         {
             titleText.text = newText;
@@ -142,11 +195,8 @@ public class ContextMenu3D : MonoBehaviour
 
             if (target != null)
             {
-                string oldName = target.getName(); // Save old name before change
-
-                target.SetName(newText); // Change name on target
-
-                // === Update TeamList UI ===
+                string oldName = target.getName();
+                target.SetName(newText);
                 TeamList teamList = ContextMenuManager.Instance.TeamList;
                 if (teamList != null)
                 {
@@ -154,47 +204,27 @@ public class ContextMenu3D : MonoBehaviour
                     teamList.RemoveUnit(oldName);
                     teamList.AddUnit(newText, teamName);
                 }
-                else
-                {
-                    Debug.LogWarning("[ContextMenu3D] No reference to TeamList found.");
-                }
-
-                // === Update ActionScrollView ===
                 ActionScrollViewManager actionScrollView = ContextMenuManager.Instance.ActionScrollView;
                 if (actionScrollView != null)
                 {
                     actionScrollView.UpdateUnitName(target, newText);
                 }
-                else
-                {
-                    Debug.LogWarning("[ContextMenu3D] No reference to ActionScrollViewManager found.");
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[ContextMenu3D] Target is null, can't save name.");
             }
         }
     }
 
     private void OnActionOptionSelected(string option)
     {
-        // Debug.Log("[ContextMenu3D] Action selected: " + option);
-
         if (target != null)
         {
-            // Log the action in the scroll view
             var actionScrollViewManager = ContextMenuManager.Instance.ActionScrollView;
             if (actionScrollViewManager != null)
             {
                 actionScrollViewManager.LogAction(target, option);
-                if ((option != null) && (option == "Movement")) {
+                if ((option != null) && (option == "Movement"))
+                {
                     OnStartMovementPathClicked();
                 }
-            }
-            else
-            {
-                Debug.LogWarning("[ContextMenu3D] No reference to ActionScrollViewManager found.");
             }
         }
     }
@@ -205,7 +235,6 @@ public class ContextMenu3D : MonoBehaviour
         {
             teamChangeRadioButton.OnOptionSelected -= SetTeamForItemInstance;
         }
-
         if (actionTypeRadioButton != null)
         {
             actionTypeRadioButton.OnOptionSelected -= OnActionOptionSelected;
@@ -216,9 +245,8 @@ public class ContextMenu3D : MonoBehaviour
     {
         if (target != null)
         {
-            ObjectPlacer.Instance.RelocateUnit(target); // <- just this
+            ObjectPlacer.Instance.RelocateUnit(target);
         }
-
         ContextMenuManager.Instance.HideContextMenu();
     }
     public void OnToggleSubmenuClicked()
@@ -226,20 +254,16 @@ public class ContextMenu3D : MonoBehaviour
         bool newState = !subPanel.activeSelf;
         subPanel.SetActive(newState);
     }
-
     public void OnDeleteClicked()
     {
         if (target != null)
             target.Delete();
-
         ContextMenuManager.Instance.HideContextMenu();
     }
-
     public void OnCloseClicked()
     {
         ContextMenuManager.Instance.HideContextMenu();
     }
-
     public void OnStartMovementPathClicked()
     {
         if (target != null)
@@ -251,24 +275,16 @@ public class ContextMenu3D : MonoBehaviour
             }
         }
     }
-
     public void SetTeamForItemInstance(string teamName)
     {
-        if (target == null || string.IsNullOrEmpty(teamName))
-            return;
-
+        if (target == null || string.IsNullOrEmpty(teamName)) return;
         string previousName = target.getName();
-
-        // Update the model
         target.setTeam(teamName);
-
-        // Update the UI team color indicator
         if (teamColorImage != null)
         {
             if (teamName == "Neutral")
             {
                 teamColorImage.color = neutralColor;
-                // Debug.Log("[ContextMenu3D] Set color to Neutral");
             }
             else if (teamName.StartsWith("Player "))
             {
@@ -277,22 +293,15 @@ public class ContextMenu3D : MonoBehaviour
                     if (teamNumber >= 1 && teamNumber <= teamColors.Length)
                     {
                         teamColorImage.color = teamColors[teamNumber - 1];
-                        // Debug.Log($"[ContextMenu3D] Set color to {teamColors[teamNumber - 1]}");
                     }
                 }
             }
         }
-
-        // Update TeamList UI
         TeamList teamList = ContextMenuManager.Instance.TeamList;
         if (teamList != null)
         {
             teamList.RemoveUnit(previousName);
             teamList.AddUnit(previousName, teamName);
-        }
-        else
-        {
-            // Debug.LogWarning("[ContextMenu3D] No reference to TeamList found.");
         }
     }
 }

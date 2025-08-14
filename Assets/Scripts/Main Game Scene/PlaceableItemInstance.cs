@@ -4,6 +4,13 @@ public class PlaceableItemInstance : MonoBehaviour
 {
     public GameObject OriginalPrefab;
     public string team;
+
+    // NEW ATTRIBUTES (persistent)
+    public int proficiency = 1;
+    public int fatigue = 1;
+    public int commsClarity = 1;
+    public int equipment = 1;
+
     private string itemName;
 
     public PlaceableItem.ItemType ItemType { get; private set; }
@@ -24,46 +31,44 @@ public class PlaceableItemInstance : MonoBehaviour
         OriginalPrefab = prefab;
         ItemType = type;
         team = "Neutral";
+
+        // Default values for new attributes
+        proficiency = 1;
+        fatigue = 1;
+        commsClarity = 1;
+        equipment = 1;
+
         itemName = initName;
 
         CreateTeamIndicator();
     }
 
-    public string getTeam()
-    {
-        return team;
-    }
-
+    public string getTeam() => team;
     public void setTeam(string newTeam)
     {
         team = newTeam;
         UpdateTeamIndicatorColor();
     }
 
-    public void SetName(string newName)
-    {
-        itemName = newName;
-    }
+    // Getters/Setters for new attributes
+    // Getters/Setters
+    public int GetProficiency() => proficiency;
+    public void SetProficiency(int v) => proficiency = (int)Mathf.Clamp(v, 1, 5);
 
-    public string getName()
-    {
-        return itemName;
-    }
+    public int GetFatigue() => fatigue;
+    public void SetFatigue(int v) => fatigue = (int)Mathf.Clamp(v, 1, 5);
 
-    public GameObject getOriginalPrefab()
-    {
-        return OriginalPrefab;
-    }
+    public int GetCommsClarity() => commsClarity;
+    public void SetCommsClarity(int v) => commsClarity = (int)Mathf.Clamp(v, 1, 5);
 
-    public bool IsUnit()
-    {
-        return ItemType == PlaceableItem.ItemType.Unit;
-    }
+    public int GetEquipment() => equipment;
+    public void SetEquipment(int v) => equipment = (int)Mathf.Clamp(v, 1, 5);
 
-    public bool IsObject()
-    {
-        return ItemType == PlaceableItem.ItemType.Object;
-    }
+    public void SetName(string newName) => itemName = newName;
+    public string getName() => itemName;
+    public GameObject getOriginalPrefab() => OriginalPrefab;
+    public bool IsUnit() => ItemType == PlaceableItem.ItemType.Unit;
+    public bool IsObject() => ItemType == PlaceableItem.ItemType.Object;
 
     public void OnClicked()
     {

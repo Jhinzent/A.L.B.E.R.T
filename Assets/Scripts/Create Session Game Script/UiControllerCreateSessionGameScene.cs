@@ -21,7 +21,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public Button loadSessionButton; // Button to load selected save
     public Button cancelButton; // Button to cancel loading
     public GameMasterMapLoader gameMasterMapLoader;
-    public GeneralSessionManager generalSessionManager;
+    public EditMapGeneralManager generalSessionManager;
 
     public GameObject mapEditingPanel;
     public GameObject teamEditingPanel;

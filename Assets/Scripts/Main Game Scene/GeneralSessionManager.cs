@@ -288,7 +288,7 @@ public class GeneralSessionManager : MonoBehaviour
 
             reportScrollViewManagerGameMasterIncoming.LoadAllReportsFromPlayerReportOutputManager();
 
-            playerReportOutputScrollViewManager.DeleteAllReportsForPlayer(0);
+            playerReportOutputScrollViewManager.DeleteAllReportsForAllPlayer();
             playerReportOutputScrollViewManager.CloseCurrentPopup();
 
             GameMasterCamera.enabled = true;
@@ -323,6 +323,7 @@ public class GeneralSessionManager : MonoBehaviour
             reportScrollViewManager.DistributeReportsToPlayers();
             reportScrollViewManager.CloseCurrentPopup();
             reportScrollViewManager.DeleteAllReports();
+            reportScrollViewManagerGameMasterIncoming.ClearAllEntries();
         }
 
         int playerListIndex = index - 1;

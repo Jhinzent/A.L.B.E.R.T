@@ -634,7 +634,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c11329fa1d4b0e4469bed2b360388465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 18
+  radius: 12
   tileSize: 3
   edgeSegmentPrefab: {fileID: 899102289302134956, guid: 533c37827e6d028458040219b68873e4, type: 3}
 --- !u!114 &8305973422665972167
