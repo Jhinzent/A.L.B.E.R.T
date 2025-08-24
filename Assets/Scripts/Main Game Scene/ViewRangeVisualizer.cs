@@ -11,6 +11,12 @@ public class ViewRangeVisualizer : MonoBehaviour
 
     public void ShowRing()
     {
+        if (edgeSegmentPrefab == null)
+        {
+            Debug.LogError("EdgeSegmentPrefab is null on " + gameObject.name);
+            return;
+        }
+
         ClearRing();
 
         float rSquared = radius * radius;
