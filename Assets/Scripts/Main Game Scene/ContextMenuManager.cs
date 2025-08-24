@@ -25,6 +25,10 @@ public class ContextMenuManager : MonoBehaviour
             return;
         }
         Instance = this;
+        
+        var visualizer = GetComponent<ViewRangeVisualizer>();
+        if (visualizer != null)
+            visualizer.ShowRing();
     }
 
     public void ShowContextMenu(PlaceableItemInstance item, Vector3 position)

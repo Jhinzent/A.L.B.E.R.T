@@ -14,13 +14,18 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
     [SerializeField] private RectTransform contentPanelSeen;   // B panel
     [SerializeField] private RectTransform viewportSeen;
 
+    [SerializeField] private RectTransform contentPanelArchived; // C panel
+    [SerializeField] private RectTransform viewportArchived;
+
     [SerializeField] private PlayerReportOutputScrollViewManager playerReportOutputScrollViewManager;
 
     public Transform ContentPanelA => contentPanelUnseen;
     public Transform ContentPanelB => contentPanelSeen;
+    public Transform ContentPanelC => contentPanelArchived;
 
     public RectTransform ViewportA => viewportUnseen;
     public RectTransform ViewportB => viewportSeen;
+    public RectTransform ViewportC => viewportArchived;
 
     [SerializeField] private GameObject reportButtonPrefab;
     [SerializeField] private GameObject reportPopupPrefab;
@@ -28,6 +33,7 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
 
     private List<ReportEntry> reportEntriesUnseen = new();
     private List<ReportEntry> reportEntriesSeen = new();
+    private List<ReportEntry> reportEntriesArchived = new();
 
     // NEW: keep manager-owned display objects per report, so multiple managers can have their own UI
     private readonly Dictionary<ReportEntry, List<GameObject>> reportDisplayObjects = new();
@@ -55,22 +61,33 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         // Debug.Log($"[LoadAllReports] Got {allReports?.Count ?? 0} reports from PlayerReportOutputScrollViewManager.");
         foreach (var report in allReports)
         {
-            AddReport(report, toUnseen: true);
+            AddReport(report, 0);
         }
     }
 
-    public void AddReport(ReportEntry report, bool toUnseen)
+    public void AddReport(ReportEntry report, int targetPanel = 0)
     {
-        // Debug.Log($"[AddReport] Called with ReportName='{report?.ReportName ?? "NULL"}', Team='{report?.Team ?? "NULL"}', toUnseen={toUnseen}");
-
         if (report == null)
         {
             Debug.LogError("[AddReport] Report is NULL! Aborting.");
             return;
         }
 
-        Transform targetContent = toUnseen ? contentPanelUnseen : contentPanelSeen;
-        var targetList = toUnseen ? reportEntriesUnseen : reportEntriesSeen;
+        Transform targetContent = targetPanel switch
+        {
+            0 => contentPanelUnseen,
+            1 => contentPanelSeen,
+            2 => contentPanelArchived,
+            _ => contentPanelUnseen
+        };
+        
+        var targetList = targetPanel switch
+        {
+            0 => reportEntriesUnseen,
+            1 => reportEntriesSeen,
+            2 => reportEntriesArchived,
+            _ => reportEntriesUnseen
+        };
 
         // Debug.Log($"[AddReport] Target content panel = '{targetContent?.name}', Target list size before add = {targetList.Count}");
 
@@ -202,7 +219,8 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         // Debug.Log($"[RemoveReport] Attempting to remove report '{report?.ReportName ?? "NULL"}' from this manager.");
 
         bool removed = RemoveReportFromList(report, reportEntriesUnseen, contentPanelUnseen)
-                    || RemoveReportFromList(report, reportEntriesSeen, contentPanelSeen);
+                    || RemoveReportFromList(report, reportEntriesSeen, contentPanelSeen)
+                    || RemoveReportFromList(report, reportEntriesArchived, contentPanelArchived);
 
         if (removed)
         {
@@ -248,6 +266,7 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
     {
         RemoveReportsForTeamFromList(team, reportEntriesUnseen);
         RemoveReportsForTeamFromList(team, reportEntriesSeen);
+        RemoveReportsForTeamFromList(team, reportEntriesArchived);
     }
 
     private void RemoveReportsForTeamFromList(string team, List<ReportEntry> list)
@@ -272,6 +291,7 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
     {
         UpdateReportNameInList(report, newName, reportEntriesUnseen);
         UpdateReportNameInList(report, newName, reportEntriesSeen);
+        UpdateReportNameInList(report, newName, reportEntriesArchived);
     }
 
     private void UpdateReportNameInList(ReportEntry report, string newName, List<ReportEntry> list)
@@ -342,14 +362,33 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         return RectTransformUtility.RectangleContainsScreenPoint(viewportSeen, screenPoint);
     }
 
-    public void AddExistingEntry(ReportEntry report, bool toUnseen)
+    public bool IsPointInScrollViewC(Vector2 screenPoint)
     {
-        // Remove from both lists first to avoid duplicates in this manager
+        return RectTransformUtility.RectangleContainsScreenPoint(viewportArchived, screenPoint);
+    }
+
+    public void AddExistingEntry(ReportEntry report, int targetPanel = 0)
+    {
+        // Remove from all lists first to avoid duplicates in this manager
         reportEntriesUnseen.Remove(report);
         reportEntriesSeen.Remove(report);
+        reportEntriesArchived.Remove(report);
 
-        Transform targetContent = toUnseen ? contentPanelUnseen : contentPanelSeen;
-        var targetList = toUnseen ? reportEntriesUnseen : reportEntriesSeen;
+        Transform targetContent = targetPanel switch
+        {
+            0 => contentPanelUnseen,
+            1 => contentPanelSeen,
+            2 => contentPanelArchived,
+            _ => contentPanelUnseen
+        };
+        
+        var targetList = targetPanel switch
+        {
+            0 => reportEntriesUnseen,
+            1 => reportEntriesSeen,
+            2 => reportEntriesArchived,
+            _ => reportEntriesUnseen
+        };
 
         if (reportButtonPrefab == null)
         {

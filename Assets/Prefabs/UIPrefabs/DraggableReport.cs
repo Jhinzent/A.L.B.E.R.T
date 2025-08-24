@@ -69,7 +69,7 @@ public class DraggableReport : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                     break;
                 }
 
-                MoveToScrollView(scrollView, true);
+                MoveToScrollView(scrollView, 0);
                 droppedInScrollView = true;
                 break;
             }
@@ -83,7 +83,21 @@ public class DraggableReport : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                     break;
                 }
 
-                MoveToScrollView(scrollView, false);
+                MoveToScrollView(scrollView, 1);
+                droppedInScrollView = true;
+                break;
+            }
+            else if (scrollView.IsPointInScrollViewC(screenPoint))
+            {
+                if (transform.parent == scrollView.ContentPanelC)
+                {
+                    transform.SetParent(scrollView.ContentPanelC, false);
+                    rectTransform.anchoredPosition = originalPosition;
+                    droppedInScrollView = true;
+                    break;
+                }
+
+                MoveToScrollView(scrollView, 2);
                 droppedInScrollView = true;
                 break;
             }
@@ -97,15 +111,22 @@ public class DraggableReport : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
     }
 
-    private void MoveToScrollView(ReportScrollViewManagerGameMasterIncoming targetScrollView, bool toScrollViewA)
+    private void MoveToScrollView(ReportScrollViewManagerGameMasterIncoming targetScrollView, int targetPanel)
     {
         OriginManager?.RemoveReport(ReportData);
 
-        Transform newParent = toScrollViewA ? targetScrollView.ContentPanelA : targetScrollView.ContentPanelB;
+        Transform newParent = targetPanel switch
+        {
+            0 => targetScrollView.ContentPanelA,
+            1 => targetScrollView.ContentPanelB,
+            2 => targetScrollView.ContentPanelC,
+            _ => targetScrollView.ContentPanelA
+        };
+        
         transform.SetParent(newParent, false);
         rectTransform.anchoredPosition = Vector2.zero;
 
         OriginManager = targetScrollView;
-        OriginManager.AddExistingEntry(ReportData, toUnseen: toScrollViewA);
+        OriginManager.AddExistingEntry(ReportData, targetPanel);
     }
 }

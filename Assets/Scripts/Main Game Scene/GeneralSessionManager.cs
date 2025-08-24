@@ -151,6 +151,37 @@ public class GeneralSessionManager : MonoBehaviour
         playerMapLoader.CreatePlayerMaps(playerAmmount);
     }
 
+    void ReloadPlayerMaps()
+    {
+        if (playerMapLoader == null)
+        {
+            Debug.LogWarning("[GSM] playerMapLoader is not assigned, cannot reload player maps");
+            return;
+        }
+
+        string currentSave = getCurrentSaveName();
+
+        SaveSystem.SaveSession(getCurrentSaveName());
+
+        if (!string.IsNullOrEmpty(currentSave))
+        {
+            SaveData saveData = SaveSystem.LoadSession(currentSave);
+            if (saveData != null)
+            {
+                playerMapLoader.ReloadPlayerMapsFromSave(saveData, playerAmmount);
+                Debug.Log($"[GSM] Player maps reloaded from save: {currentSave}");
+            }
+        }
+    }
+
+    string getCurrentSaveName()
+    {
+        if (!string.IsNullOrEmpty(gameSessioSaveName)) return gameSessioSaveName;
+        if (!string.IsNullOrEmpty(loadSaveName)) return loadSaveName;
+        if (!string.IsNullOrEmpty(createSaveName)) return createSaveName;
+        return "";
+    }
+
     void Awake()
     {
         // Disable all player canvases
@@ -272,7 +303,16 @@ public class GeneralSessionManager : MonoBehaviour
     /// </summary>
     private void SwitchToIndex(int index)
     {
+        // Check if we need to reload player maps before switching to a player
+        if (reloadFlag && index > 0)
+        {
+            ReloadPlayerMaps();
+            reloadFlag = false;
+        }
+
         // Debug.Log($"[GSM] SwitchToIndex({index}) called. playerAmmount = {playerAmmount}");
+
+        closeAllMenus();
 
         DisableAll();
 
@@ -369,6 +409,21 @@ public class GeneralSessionManager : MonoBehaviour
 
         // Debug.Log($"[GSM] Now in Player {index} view. (playerListIndex = {playerListIndex})");
         // LogState();
+    }
+
+    private void closeAllMenus()
+    {
+        Canvas player1Cvs = playerCanvases[0];
+        Canvas player2Cvs = playerCanvases[1];
+        Canvas player3Cvs = playerCanvases[2];
+        Canvas player4Cvs = playerCanvases[3];
+
+        GameMasterCanvas.GetComponent<UiControllerCreateSessionGameScene>().HideMenu();
+        player1Cvs.GetComponent<UiControllerMainGameScene>().HideMenu();
+        player2Cvs.GetComponent<UiControllerMainGameScene>().HideMenu();
+        player3Cvs.GetComponent<UiControllerMainGameScene>().HideMenu();
+        player4Cvs.GetComponent<UiControllerMainGameScene>().HideMenu();
+
     }
 
     private void DisableAll()

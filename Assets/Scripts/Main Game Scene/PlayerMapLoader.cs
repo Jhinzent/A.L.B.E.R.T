@@ -59,6 +59,28 @@ public class PlayerMapLoader : MonoBehaviour
         CreatePlayerMaps(playerMaps.Count);
     }
 
+    public void ReloadPlayerMapsFromSave(SaveData saveData, int numberOfPlayers)
+    {
+        if (numberOfPlayers <= 0 || numberOfPlayers > mapAnchors.Count)
+        {
+            Debug.LogError($"[PlayerMapLoader] Invalid number of players: {numberOfPlayers}. Available anchors: {mapAnchors.Count}");
+            return;
+        }
+
+        DeleteAllMaps();
+        
+        playerMaps.Clear();
+        for (int i = 0; i < numberOfPlayers; i++)
+        {
+            playerMaps.Add(new List<GameObject>());
+        }
+
+        for (int i = 0; i < numberOfPlayers; i++)
+        {
+            BuildMapForPlayer(saveData, i);
+        }
+    }
+
     private void DeleteAllMaps()
     {
         int totalTiles = 0;

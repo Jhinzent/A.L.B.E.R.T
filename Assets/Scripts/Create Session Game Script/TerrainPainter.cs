@@ -29,13 +29,18 @@ public class TerrainPainter : MonoBehaviour
                 {
                     currentTile = tile;
                     tile.SetTerrainType(selectedTerrainType);
+                    
+                    if (generalGameSessionmanager != null)
+                    {
+                        generalGameSessionmanager.setReloadFlagTrue();
+                    }
                 }
                 else if (tile == null)
                 {
                     // Show what object and components are intercepting the ray
                     GameObject hitObject = hit.collider.gameObject;
                     string components = string.Join(", ", hitObject.GetComponents<Component>().Select(c => c.GetType().Name));
-                    Debug.Log($"Raycast hit '{hitObject.name}' at {hit.point} but it's not a TerrainTile. Components on hit object: {components}");
+                    // Debug.Log($"Raycast hit '{hitObject.name}' at {hit.point} but it's not a TerrainTile. Components on hit object: {components}");
                 }
             }
         }
@@ -44,7 +49,7 @@ public class TerrainPainter : MonoBehaviour
         if (Input.GetMouseButtonDown(1)) // Right-click (button 1)
         {
             ResetTerrainSelection();  // Cancel the painting and reset
-            Debug.Log("Terrain painting cancelled.");
+            // Debug.Log("Terrain painting cancelled.");
         }
     }
 
@@ -52,18 +57,13 @@ public class TerrainPainter : MonoBehaviour
     // Method to change the selected terrain type using an integer
     public void SetSelectedTerrain(int terrainIndex)
     {
-        if (generalGameSessionmanager != null)
-        {
-            generalGameSessionmanager.setReloadFlagTrue();
-        }
-
         selectedTerrainType = (TerrainTile.TerrainType)terrainIndex;
         isTerrainSelected = true; // Mark that terrain is selected
 
         // If "None" is selected, no painting will occur until it's reset to something else
         if (selectedTerrainType == TerrainTile.TerrainType.None)
         {
-            Debug.Log("Painting mode set to None, waiting for reset.");
+            // Debug.Log("Painting mode set to None, waiting for reset.");
         }
     }
 
@@ -72,6 +72,6 @@ public class TerrainPainter : MonoBehaviour
     {
         selectedTerrainType = TerrainTile.TerrainType.None;
         isTerrainSelected = false; // Reset the flag
-        Debug.Log("Terrain selection reset.");
+        // Debug.Log("Terrain selection reset.");
     }
 }

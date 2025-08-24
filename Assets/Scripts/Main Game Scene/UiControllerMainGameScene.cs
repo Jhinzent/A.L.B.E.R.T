@@ -101,7 +101,7 @@ public class UiControllerMainGameScene : MonoBehaviour
         }
     }
 
-    private void HideMenu()
+    public void HideMenu()
     {
         isMenuActive = false;
         IsMenuActive = false;

@@ -9,8 +9,8 @@ public class GameMasterMapManager : MonoBehaviour
 
     // Internal grid data
     private TerrainTile[,] gridTiles;
-    private int gridWidth = 200;
-    private int gridHeight = 100;
+    private int gridWidth = 800;
+    private int gridHeight = 500;
     private float originX, originZ;   // world‐space of grid[0,0]
     private float spacing;            // world‐space distance between grid cells
 

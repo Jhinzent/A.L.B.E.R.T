@@ -17,7 +17,7 @@ public class ObjectPlacer : MonoBehaviour
     private bool isRelocating = false;
 
     public List<PlaceableItemInstance> placedUnits = new List<PlaceableItemInstance>();
-    private string currentFilterTeam = "";
+    private string currentFilterTeam = "All";
 
     public System.Action<PlaceableItemInstance> OnUnitPlaced;
     public System.Action<PlaceableItemInstance> OnUnitRemoved;
@@ -44,7 +44,7 @@ public class ObjectPlacer : MonoBehaviour
             Debug.LogWarning("ObjectPlacer: teamList or teamFilterRadio is not assigned.");
         }
 
-        UpdateTeamList();
+        UpdateTeamList("All");
     }
 
     void Update()
@@ -60,42 +60,45 @@ public class ObjectPlacer : MonoBehaviour
 
     public void SetSelectedPrefab(GameObject prefab, PlaceableItem.ItemType itemType, string existingName = null, string existingTeam = "Neutral")
     {
-        Debug.Log($"[ObjectPlacer] SetSelectedPrefab called.");
-        Debug.Log($"[ObjectPlacer] Prefab received: {(prefab != null ? prefab.name : "NULL")}");
-        Debug.Log($"[ObjectPlacer] ItemType received: {itemType}");
-        Debug.Log($"[ObjectPlacer] ExistingName received: {(string.IsNullOrEmpty(existingName) ? "NULL/Empty" : existingName)}");
-        Debug.Log($"[ObjectPlacer] ExistingTeam received: {existingTeam}");
 
         selectedPrefab = prefab;
         selectedItemType = itemType;
 
         if (previewObject != null)
         {
-            Debug.Log("[ObjectPlacer] Destroying previous preview object.");
+            // Debug.Log("[ObjectPlacer] Destroying previous preview object.");
             Destroy(previewObject);
         }
 
         previewObject = Instantiate(selectedPrefab);
-        Debug.Log($"[ObjectPlacer] Preview object instantiated: {previewObject.name}");
+        // Debug.Log($"[ObjectPlacer] Preview object instantiated: {previewObject.name}");
 
         Collider col = previewObject.GetComponent<Collider>();
         if (col != null)
         {
             col.enabled = false;
-            Debug.Log("[ObjectPlacer] Disabled collider on preview object.");
+            // Debug.Log("[ObjectPlacer] Disabled collider on preview object.");
         }
 
         SetMaterialTransparent(previewObject);
-        Debug.Log("[ObjectPlacer] Applied transparent material to preview object.");
+        // Debug.Log("[ObjectPlacer] Applied transparent material to preview object.");
 
         isPlacing = true;
-        Debug.Log("[ObjectPlacer] isPlacing set to TRUE.");
+        // Debug.Log("[ObjectPlacer] isPlacing set to TRUE.");
 
         var instance = previewObject.GetComponent<PlaceableItemInstance>() ?? previewObject.AddComponent<PlaceableItemInstance>();
         instance.Init(prefab, itemType, existingName ?? "NewObject");
         instance.setTeam(existingTeam);
 
-        Debug.Log($"[ObjectPlacer] Preview object initialized with Name='{instance.getName()}', Team='{instance.getTeam()}', ItemType={instance.ItemType}");
+        // Show ring for units during preview
+        if (itemType == PlaceableItem.ItemType.Unit)
+        {
+            var visualizer = previewObject.GetComponent<ViewRangeVisualizer>();
+            if (visualizer != null)
+                visualizer.ShowRing();
+        }
+
+        // Debug.Log($"[ObjectPlacer] Preview object initialized with Name='{instance.getName()}', Team='{instance.getTeam()}', ItemType={instance.ItemType}");
     }
 
     public void SetRelocating(bool relocating)
@@ -117,6 +120,24 @@ public class ObjectPlacer : MonoBehaviour
         instance.Init(selectedPrefab, selectedItemType, objectName);
         instance.setTeam(team);
 
+        // Copy ViewRangeVisualizer settings from preview to placed object
+        var previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
+        var placedVisualizer = placedObject.GetComponent<ViewRangeVisualizer>();
+        
+        Debug.Log($"Preview visualizer: {(previewVisualizer != null ? "Found" : "NULL")}");
+        Debug.Log($"Placed visualizer: {(placedVisualizer != null ? "Found" : "NULL")}");
+        
+        if (placedVisualizer != null)
+        {
+            if (previewVisualizer != null)
+            {
+                placedVisualizer.edgeSegmentPrefab = previewVisualizer.edgeSegmentPrefab;
+                placedVisualizer.radius = previewVisualizer.radius;
+                placedVisualizer.tileSize = previewVisualizer.tileSize;
+            }
+            placedVisualizer.ShowRing();
+        }
+
         // This block ensures the instance is always tracked
         if (selectedItemType == PlaceableItem.ItemType.Unit)
         {
@@ -125,10 +146,7 @@ public class ObjectPlacer : MonoBehaviour
 
             if (teamList != null)
             {
-                if (team == currentFilterTeam || currentFilterTeam == "All")
-                {
-                    teamList.AddUnit(objectName, team);
-                }
+                teamList.AddUnit(objectName, team);
             }
         }
 
@@ -213,7 +231,7 @@ public class ObjectPlacer : MonoBehaviour
         if (!placedUnits.Contains(unit))
         {
             placedUnits.Add(unit);
-            if (unit.getTeam() == currentFilterTeam || currentFilterTeam == "All")
+            if (teamList != null)
             {
                 teamList.AddUnit(unit.getName(), unit.getTeam());
             }
@@ -252,7 +270,7 @@ public class ObjectPlacer : MonoBehaviour
         if (teamList != null)
         {
             // Instead of just populating list with all units, filter by currentFilterTeam
-            UpdateTeamList(currentFilterTeam);
+            UpdateTeamList(string.IsNullOrEmpty(currentFilterTeam) ? "All" : currentFilterTeam);
         }
     }
 }

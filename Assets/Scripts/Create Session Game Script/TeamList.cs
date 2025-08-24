@@ -35,6 +35,8 @@ public class TeamList : MonoBehaviour
         {
             Debug.LogWarning("TeamList: teamFilterRadio not assigned.");
         }
+
+        OnTeamFilterSelected(currentSelectedTeam);
     }
 
     private void OnTeamFilterSelected(string selectedTeam)
@@ -74,8 +76,16 @@ public class TeamList : MonoBehaviour
 
     public void AddUnit(string unitName, string team)
     {
-        // Debug.Log($"TeamList: AddUnit called for {unitName} ({team})");
-        CreateUnitButtonSorted(unitName, team);
+        //Debug.Log($"TeamList: AddUnit called for {unitName} (team='{team}'), currentSelectedTeam='{currentSelectedTeam}'");
+        if (currentSelectedTeam == "All" || currentSelectedTeam == team)
+        {
+            //Debug.Log($"TeamList: Refreshing list for {unitName}");
+            OnTeamFilterSelected(currentSelectedTeam);
+        }
+        else
+        {
+            Debug.Log($"TeamList: Not refreshing - team '{team}' doesn't match filter '{currentSelectedTeam}'");
+        }
     }
 
     public void RemoveUnit(string unitName)
@@ -104,6 +114,12 @@ public class TeamList : MonoBehaviour
 
     private void CreateUnitButtonSorted(string unitName, string team)
     {
+        // Only show the unit if it matches the current filter
+        if (currentSelectedTeam != "All" && currentSelectedTeam != team)
+        {
+            return; // Don't create button if it doesn't match current filter
+        }
+
         GameObject buttonObj = Instantiate(buttonPrefab);
         ConfigureButton(buttonObj, unitName, team);
 
@@ -112,8 +128,6 @@ public class TeamList : MonoBehaviour
         buttonObj.transform.SetParent(contentPanel, false);
         buttonObj.transform.SetSiblingIndex(insertIndex);
         unitButtons.Insert(insertIndex, buttonObj);
-
-        // Debug.Log($"TeamList: Inserted unit button {unitName} at index {insertIndex}");
     }
 
     private void ConfigureButton(GameObject buttonObj, string unitName, string team)

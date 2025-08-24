@@ -197,17 +197,21 @@ public class ContextMenu3D : MonoBehaviour
             {
                 string oldName = target.getName();
                 target.SetName(newText);
-                TeamList teamList = ContextMenuManager.Instance.TeamList;
-                if (teamList != null)
+                
+                string teamName = target.getTeam();
+                if (!string.IsNullOrEmpty(teamName))
                 {
-                    string teamName = target.getTeam();
-                    teamList.RemoveUnit(oldName);
-                    teamList.AddUnit(newText, teamName);
-                }
-                ActionScrollViewManager actionScrollView = ContextMenuManager.Instance.ActionScrollView;
-                if (actionScrollView != null)
-                {
-                    actionScrollView.UpdateUnitName(target, newText);
+                    TeamList teamList = ContextMenuManager.Instance.TeamList;
+                    if (teamList != null)
+                    {
+                        teamList.RemoveUnit(oldName);
+                        teamList.AddUnit(newText, teamName);
+                    }
+                    ActionScrollViewManager actionScrollView = ContextMenuManager.Instance.ActionScrollView;
+                    if (actionScrollView != null)
+                    {
+                        actionScrollView.UpdateUnitName(target, newText);
+                    }
                 }
             }
         }

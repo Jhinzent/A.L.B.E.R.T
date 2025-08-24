@@ -12,8 +12,6 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public GameObject saveButton;
     public GameObject mainMenuButton;
 
-
-
     public GameObject uiPlane; // The main UI menu panel
     public GameObject saveScrollView; // The scroll view for saves (initially disabled)
     public Transform contentPanel; // The panel inside the scroll view that holds save buttons
@@ -33,7 +31,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public GameObject itemScrollView;
     public GameObject terrainScrollView;
     public GameObject unitScrollView;
-
+    public GameObject pipelineUI;
     private bool isMenuActive = false;
     private string selectedSave;
 
@@ -48,9 +46,27 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
         HideAllScrollViews();
     }
 
+    void Start()
+    {
+        TogglePipelineUI();
+    }
+
     public void ToggleMenuButtonPress()
     {
         ToggleMenu();
+    }
+
+    public void TogglePipelineUI()
+    {
+        if (pipelineUI != null)
+        {
+            bool isActive = pipelineUI.activeSelf;
+            pipelineUI.SetActive(!isActive);
+        }
+        else
+        {
+            Debug.LogWarning("Pipeline UI is not assigned in the inspector.");
+        }
     }
 
     private void HideAllScrollViews()
@@ -175,7 +191,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
         }
     }
 
-    private void HideMenu()
+    public void HideMenu()
     {
         isMenuActive = false;
         IsMenuActive = false;

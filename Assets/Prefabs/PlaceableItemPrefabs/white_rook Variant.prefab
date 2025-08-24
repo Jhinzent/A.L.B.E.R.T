@@ -331,6 +331,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 343682099782220849, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1097866812558338048}
+    - targetCorrespondingSourceObject: {fileID: 343682099782220849, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 419628922012271947}
   m_SourcePrefab: {fileID: 100100000, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
 --- !u!4 &2495256942245053593 stripped
 Transform:
@@ -356,6 +359,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OriginalPrefab: {fileID: 343682099782220849, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
   team: 
+  proficiency: 1
+  fatigue: 1
+  commsClarity: 1
+  equipment: 1
 --- !u!120 &3917980647612377803
 LineRenderer:
   serializedVersion: 2
@@ -498,3 +505,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1.78, z: 1}
   m_Center: {x: 0, y: 0.94, z: 0}
+--- !u!114 &419628922012271947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6337413526508168103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c11329fa1d4b0e4469bed2b360388465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 12
+  tileSize: 6
+  edgeSegmentPrefab: {fileID: 899102289302134956, guid: 533c37827e6d028458040219b68873e4, type: 3}
