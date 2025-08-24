@@ -13,6 +13,10 @@ public class DrawMeshFull : MonoBehaviour
     private Vector3 lastPos;
     private float thickness = 1f;
     private Color color = Color.red;
+    private bool treasureMapMode = false;
+    private float gapCounter = 0f;
+    private float gapInterval = 0.05f;
+    private float gapLength = 0.01f;
 
     public bool isDrawing = false;
     public bool drawingEnabled = false;
@@ -46,9 +50,12 @@ public class DrawMeshFull : MonoBehaviour
         if (Input.GetMouseButton(0) && isDrawing)
         {
             Vector3 mousePos = GetMouseWorldPosition();
-            if (Vector3.Distance(mousePos, lastPos) > 0.05f)
+            if (Vector3.Distance(mousePos, lastPos) > 0.01f)
             {
-                AddLineSegment(mesh, lastPos, mousePos, thickness);
+                if (!treasureMapMode || ShouldDrawSegment())
+                {
+                    AddLineSegment(mesh, lastPos, mousePos, thickness);
+                }
                 lastPos = mousePos;
             }
         }
@@ -93,6 +100,24 @@ public class DrawMeshFull : MonoBehaviour
     }
 
     public void SetThickness(float value) => thickness = value;
+
+    public void SetNormalDrawingMode()
+    {
+        treasureMapMode = false;
+    }
+
+    public void SetTreasureMapMode()
+    {
+        treasureMapMode = true;
+        gapCounter = 0f;
+    }
+
+    private bool ShouldDrawSegment()
+    {
+        gapCounter += 0.01f;
+        float cyclePosition = gapCounter % (gapInterval + gapLength);
+        return cyclePosition < gapInterval;
+    }
 
     private void AddLineSegment(Mesh mesh, Vector3 lastPos, Vector3 currentPos, float thickness)
     {

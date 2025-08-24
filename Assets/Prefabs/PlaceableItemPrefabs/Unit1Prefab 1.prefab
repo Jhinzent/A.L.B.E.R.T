@@ -622,6 +622,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OriginalPrefab: {fileID: 7154217283152218834}
   team: 
+  proficiency: 1
+  fatigue: 1
+  commsClarity: 1
+  equipment: 1
 --- !u!114 &4282811170098857792
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -652,6 +656,7 @@ MonoBehaviour:
   pathRenderer: {fileID: 8879785004471136748}
   terrainManager: {fileID: 0}
   costText: {fileID: 3983569316071554772}
+  pathcolor: {r: 0, g: 0.46226418, b: 0.11083529, a: 0}
   bezierSegments: 20
   controlPointHeight: 25
 --- !u!120 &8879785004471136748

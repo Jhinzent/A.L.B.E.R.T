@@ -18,8 +18,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public Button saveButtonPrefab; // Prefab for save buttons
     public Button loadSessionButton; // Button to load selected save
     public Button cancelButton; // Button to cancel loading
-    public GameMasterMapLoader gameMasterMapLoader;
-    public EditMapGeneralManager generalSessionManager;
+    public GeneralSessionManager generalSessionManager;
 
     public GameObject mapEditingPanel;
     public GameObject teamEditingPanel;
@@ -32,7 +31,9 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public GameObject terrainScrollView;
     public GameObject unitScrollView;
     public GameObject pipelineUI;
+    public GameObject nextPlayerMenu;
     private bool isMenuActive = false;
+    private bool isNextPlayerMenuActive = false;
     private string selectedSave;
 
     void Awake()
@@ -44,6 +45,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
         cancelButton.gameObject.SetActive(false);
         // Initially hide all scroll views
         HideAllScrollViews();
+        HideNextPlayerMenu();
     }
 
     void Start()
@@ -105,7 +107,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
         itemScrollView.SetActive(shouldShow);
     }
 
-    public void toggleUnitScrollView() // ✅ NEW: toggle for unit scroll view
+    public void toggleUnitScrollView()
     {
         bool shouldShow = !unitScrollView.activeSelf;
         HideAllScrollViews();
@@ -177,7 +179,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     private void ToggleMenu()
     {
         isMenuActive = !isMenuActive;
-        IsMenuActive = isMenuActive;
+        IsMenuActive = isMenuActive || isNextPlayerMenuActive;
         uiPlane.SetActive(isMenuActive);
         saveScrollView.SetActive(false); // Ensure save menu is hidden initially
 
@@ -194,12 +196,31 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public void HideMenu()
     {
         isMenuActive = false;
-        IsMenuActive = false;
+        IsMenuActive = isNextPlayerMenuActive;
         uiPlane.SetActive(false);
         saveScrollView.SetActive(false);
         HideAllScrollViews();
         EnableMainButtons();
-        Time.timeScale = 1f;
+    }
+
+    public void ShowNextPlayerMenu()
+    {
+        isNextPlayerMenuActive = true;
+        IsMenuActive = true;
+        nextPlayerMenu.SetActive(true);
+    }
+
+    public void HideNextPlayerMenu()
+    {
+        isNextPlayerMenuActive = false;
+        IsMenuActive = isMenuActive;
+        nextPlayerMenu.SetActive(false);
+    }
+
+    public void SwitchToNextPlayer()
+    {
+        generalSessionManager.SwitchToNext();
+        HideNextPlayerMenu();
     }
 
     private void ShowSaveMenu()

@@ -28,7 +28,7 @@ public class UnitMovement : MonoBehaviour
         pathRenderer.positionCount = 0;
         pathRenderer.widthMultiplier = 2.5f;
         pathRenderer.material = new Material(Shader.Find("Unlit/Color"));
-        pathRenderer.material.color = Color.cyan;
+        pathRenderer.material.color = Color.red;
         pathRenderer.enabled = false;
 
         if (costText != null)
@@ -55,7 +55,10 @@ public class UnitMovement : MonoBehaviour
         // 3. Compute & update cost
         float cost = ComputePathCost(points);
         if (costText != null)
-            costText.text = $"Cost: {cost:F1}";
+        {
+            int displayCost = Mathf.RoundToInt(cost / 10f) * 10;
+            costText.text = $"Cost: {displayCost}";
+        }
 
         // 4. Confirm on click
         if (Input.GetMouseButtonDown(0))
@@ -90,20 +93,10 @@ public class UnitMovement : MonoBehaviour
 
     private float ComputePathCost(Vector3[] points)
     {
-        if (terrainManager == null || points == null || points.Length == 0)
+        if (terrainManager == null || points == null || points.Length < 2)
             return 0f;
 
-        // 1. Count occurences
-        var counts = new Dictionary<TerrainTile.TerrainType, int>();
-        foreach (var p in points)
-        {
-            var tile = terrainManager.GetTileAtWorldPosition(p);
-            if (tile == null) continue;
-            var t = tile.GetTerrainType();
-            counts[t] = counts.ContainsKey(t) ? counts[t] + 1 : 1;
-        }
-
-        // 2. Costs per terrain
+        // Costs per terrain
         var costMap = new Dictionary<TerrainTile.TerrainType, float>
         {
             { TerrainTile.TerrainType.None,     1f   },
@@ -120,13 +113,23 @@ public class UnitMovement : MonoBehaviour
             { TerrainTile.TerrainType.Snow,     1.8f }
         };
 
-        // 3. Sum
         float total = 0f;
-        foreach (var kv in counts)
+        for (int i = 0; i < points.Length - 1; i++)
         {
-            float per = costMap.ContainsKey(kv.Key) ? costMap[kv.Key] : 1f;
-            total += per * kv.Value;
+            Vector3 segmentStart = points[i];
+            Vector3 segmentEnd = points[i + 1];
+            float segmentDistance = Vector3.Distance(segmentStart, segmentEnd);
+            
+            // Use terrain at segment midpoint
+            Vector3 midPoint = (segmentStart + segmentEnd) * 0.5f;
+            var tile = terrainManager.GetTileAtWorldPosition(midPoint);
+            
+            TerrainTile.TerrainType terrainType = tile?.GetTerrainType() ?? TerrainTile.TerrainType.None;
+            float terrainCost = costMap.ContainsKey(terrainType) ? costMap[terrainType] : 1f;
+            
+            total += segmentDistance * terrainCost;
         }
+        
         return total;
     }
 

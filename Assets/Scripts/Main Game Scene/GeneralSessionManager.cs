@@ -140,6 +140,33 @@ public class GeneralSessionManager : MonoBehaviour
         return gameSessioSaveName;
     }
 
+    public string ValidatePassphrase(string passphrase)
+    {
+        int nextPlayerIndex = currentIndex + 1;
+        
+        if (nextPlayerIndex > playerAmmount)
+        {
+            // Next is GameMaster (wrapping around)
+            if (passphrase == "GameMaster")
+            {
+                SwitchToNext();
+                return "Successful";
+            }
+            return "Not Successful";
+        }
+        else
+        {
+            // Next is a player
+            string expectedPassphrase = $"Player{nextPlayerIndex}";
+            if (passphrase == expectedPassphrase)
+            {
+                SwitchToNext();
+                return "Successful";
+            }
+            return "Not Successful";
+        }
+    }
+
     void LoadAllPlayerMaps()
     {
         if (playerMapLoader == null)
