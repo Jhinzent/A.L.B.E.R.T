@@ -90,24 +90,43 @@ public class ContextMenu3D : MonoBehaviour
     {
         proficiencyValue = value;
         UpdateAttributeUI(proficiencyButtons, value);
+        if (target != null) target.SetProficiency(value);
     }
 
     public void SetFatigue(int value)
     {
         fatigueValue = value;
         UpdateAttributeUI(fatigueButtons, value);
+        if (target != null) target.SetFatigue(value);
     }
 
     public void SetConnectivity(int value)
     {
         connectivityValue = value;
         UpdateAttributeUI(commsClarityButtons, value);
+        if (target != null) target.SetCommsClarity(value);
     }
 
     public void SetEquipment(int value)
     {
         equipmentValue = value;
         UpdateAttributeUI(equipmentButtons, value);
+        if (target != null) target.SetEquipment(value);
+    }
+
+    private void LoadAttributesFromTarget()
+    {
+        if (target == null) return;
+
+        proficiencyValue = target.GetProficiency();
+        fatigueValue = target.GetFatigue();
+        connectivityValue = target.GetCommsClarity();
+        equipmentValue = target.GetEquipment();
+
+        UpdateAttributeUI(proficiencyButtons, proficiencyValue);
+        UpdateAttributeUI(fatigueButtons, fatigueValue);
+        UpdateAttributeUI(commsClarityButtons, connectivityValue);
+        UpdateAttributeUI(equipmentButtons, equipmentValue);
     }
 
     // === Your existing methods unchanged ===
@@ -166,6 +185,9 @@ public class ContextMenu3D : MonoBehaviour
             {
                 titleText.text = target.getName();
             }
+
+            // Load attributes from PlaceableItemInstance
+            LoadAttributesFromTarget();
         }
     }
 

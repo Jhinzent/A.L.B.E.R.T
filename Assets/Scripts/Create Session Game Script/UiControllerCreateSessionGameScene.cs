@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
+using System.Text.RegularExpressions;
 
 public class UiControllerCreateSessionGameScene : MonoBehaviour
 {
@@ -32,9 +33,13 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public GameObject unitScrollView;
     public GameObject pipelineUI;
     public GameObject nextPlayerMenu;
+    public TMP_InputField timeInputField;
+    public TMP_InputField setTimeInputField;
+    public Button confirmTimeButton;
     private bool isMenuActive = false;
     private bool isNextPlayerMenuActive = false;
     private string selectedSave;
+    private string currentGameTime = "01/01/2024 00:00";
 
     void Awake()
     {
@@ -51,6 +56,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     void Start()
     {
         TogglePipelineUI();
+        InitializeTimeInput();
     }
 
     public void ToggleMenuButtonPress()
@@ -214,7 +220,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     {
         isNextPlayerMenuActive = false;
         IsMenuActive = isMenuActive;
-        nextPlayerMenu.SetActive(false);
+        if (nextPlayerMenu != null) nextPlayerMenu.SetActive(false);
     }
 
     public void SwitchToNextPlayer()
@@ -324,5 +330,164 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
         loadSaveButton.SetActive(true);
         saveButton.SetActive(true);
         mainMenuButton.SetActive(true);
+    }
+
+    private void InitializeTimeInput()
+    {
+        if (timeInputField != null)
+        {
+            timeInputField.text = currentGameTime;
+            timeInputField.onValueChanged.AddListener(OnTimeInputChanged);
+            timeInputField.onEndEdit.AddListener(OnTimeInputEndEdit);
+        }
+        
+        if (setTimeInputField != null)
+        {
+            setTimeInputField.text = currentGameTime;
+            setTimeInputField.onValueChanged.AddListener(OnSetTimeInputChanged);
+        }
+        
+        if (confirmTimeButton != null)
+        {
+            confirmTimeButton.onClick.AddListener(OnConfirmTimeButtonClick);
+        }
+    }
+
+    private void OnTimeInputChanged(string input)
+    {
+        string result = "";
+        int caretPos = timeInputField.caretPosition;
+        
+        for (int i = 0; i < input.Length && result.Length < 16; i++)
+        {
+            char c = input[i];
+            int pos = result.Length;
+            
+            if (pos == 2 || pos == 5) // Add '/' after day and month
+            {
+                if (c != '/') result += "/";
+                if (c == '/') { result += c; continue; }
+                pos = result.Length;
+            }
+            else if (pos == 10) // Add space after year
+            {
+                if (c != ' ') result += " ";
+                if (c == ' ') { result += c; continue; }
+                pos = result.Length;
+            }
+            else if (pos == 13) // Add ':' after hour
+            {
+                if (c != ':') result += ":";
+                if (c == ':') { result += c; continue; }
+                pos = result.Length;
+            }
+            
+            if (char.IsDigit(c))
+            {
+                if ((pos < 2) || (pos > 2 && pos < 5) || (pos > 5 && pos < 10) || (pos > 10 && pos < 13) || (pos > 13 && pos < 16))
+                {
+                    result += c;
+                }
+            }
+        }
+        
+        if (result != input)
+        {
+            timeInputField.text = result;
+            timeInputField.caretPosition = Mathf.Min(caretPos, result.Length);
+        }
+    }
+
+    private void OnTimeInputEndEdit(string input)
+    {
+        if (ValidateTimeFormat(input))
+        {
+            currentGameTime = input;
+            generalSessionManager.SetGameTime(currentGameTime);
+        }
+        else
+        {
+            timeInputField.text = currentGameTime; // Revert to last valid time
+        }
+    }
+
+    private bool ValidateTimeFormat(string timeString)
+    {
+        // Pattern: dd/mm/yyyy hh:mm
+        string pattern = @"^\d{2}/\d{2}/\d{4} \d{2}:\d{2}$";
+        return Regex.IsMatch(timeString, pattern);
+    }
+
+    public void SetGameTime(string time)
+    {
+        if (ValidateTimeFormat(time))
+        {
+            currentGameTime = time;
+            if (timeInputField != null)
+            {
+                timeInputField.text = currentGameTime;
+            }
+            generalSessionManager.SetGameTime(currentGameTime);
+        }
+    }
+
+    public string GetGameTime()
+    {
+        return currentGameTime;
+    }
+
+    private void OnSetTimeInputChanged(string input)
+    {
+        string result = "";
+        int caretPos = setTimeInputField.caretPosition;
+        
+        for (int i = 0; i < input.Length && result.Length < 16; i++)
+        {
+            char c = input[i];
+            int pos = result.Length;
+            
+            if (pos == 2 || pos == 5)
+            {
+                if (c != '/') result += "/";
+                if (c == '/') { result += c; continue; }
+                pos = result.Length;
+            }
+            else if (pos == 10)
+            {
+                if (c != ' ') result += " ";
+                if (c == ' ') { result += c; continue; }
+                pos = result.Length;
+            }
+            else if (pos == 13)
+            {
+                if (c != ':') result += ":";
+                if (c == ':') { result += c; continue; }
+                pos = result.Length;
+            }
+            
+            if (char.IsDigit(c))
+            {
+                if ((pos < 2) || (pos > 2 && pos < 5) || (pos > 5 && pos < 10) || (pos > 10 && pos < 13) || (pos > 13 && pos < 16))
+                {
+                    result += c;
+                }
+            }
+        }
+        
+        if (result != input)
+        {
+            setTimeInputField.text = result;
+            setTimeInputField.caretPosition = Mathf.Min(caretPos, result.Length);
+        }
+    }
+
+    private void OnConfirmTimeButtonClick()
+    {
+        if (ValidateTimeFormat(setTimeInputField.text))
+        {
+            currentGameTime = setTimeInputField.text;
+            timeInputField.text = currentGameTime;
+            generalSessionManager.UpdateAllPlayerTimes(currentGameTime);
+        }
     }
 }

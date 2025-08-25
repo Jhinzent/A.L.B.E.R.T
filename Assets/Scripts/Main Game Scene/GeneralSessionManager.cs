@@ -40,6 +40,7 @@ public class GeneralSessionManager : MonoBehaviour
     private string createSaveName;
     private string loadSaveName;
     private string gameSessioSaveName;
+    private string gameTime = "01/01/2024 00:00";
 
     void Start()
     {
@@ -138,6 +139,41 @@ public class GeneralSessionManager : MonoBehaviour
     public string getGameSessionSaveName()
     {
         return gameSessioSaveName;
+    }
+
+    public void SetGameTime(string time)
+    {
+        gameTime = time;
+        Debug.Log(time);
+    }
+
+    public string GetGameTime()
+    {
+        return gameTime;
+    }
+
+    public void UpdateAllPlayerTimes(string time)
+    {
+        SetGameTime(time);
+        
+        // Update GameMaster UI
+        if (uiControllerCreateSessionGameScene != null)
+        {
+            uiControllerCreateSessionGameScene.SetGameTime(time);
+        }
+        
+        // Update all player UIs
+        if (playerCanvases != null)
+        {
+            for (int i = 0; i < playerCanvases.Count && i < playerAmmount; i++)
+            {
+                var playerUI = playerCanvases[i].GetComponent<UiControllerMainGameScene>();
+                if (playerUI != null)
+                {
+                    playerUI.UpdateTimeDisplay(time);
+                }
+            }
+        }
     }
 
     public string ValidatePassphrase(string passphrase)
@@ -303,7 +339,7 @@ public class GeneralSessionManager : MonoBehaviour
     public void setReloadFlagTrue()
     {
         reloadFlag = true;
-        Debug.Log("[GSM] reloadFlag set to TRUE");
+        // Debug.Log("[GSM] reloadFlag set to TRUE");
     }
 
     public void SwitchToNext()

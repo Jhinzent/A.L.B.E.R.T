@@ -15,6 +15,7 @@ public class ObjectPlacer : MonoBehaviour
     private PlaceableItem.ItemType selectedItemType;
     public TeamList teamList;
     private bool isRelocating = false;
+    private int[] relocatingAttributes; // [proficiency, fatigue, commsClarity, equipment]
 
     public List<PlaceableItemInstance> placedUnits = new List<PlaceableItemInstance>();
     private string currentFilterTeam = "All";
@@ -119,6 +120,16 @@ public class ObjectPlacer : MonoBehaviour
 
         instance.Init(selectedPrefab, selectedItemType, objectName);
         instance.setTeam(team);
+        
+        // Apply preserved attributes if relocating
+        if (isRelocating && relocatingAttributes != null)
+        {
+            instance.SetProficiency(relocatingAttributes[0]);
+            instance.SetFatigue(relocatingAttributes[1]);
+            instance.SetCommsClarity(relocatingAttributes[2]);
+            instance.SetEquipment(relocatingAttributes[3]);
+            relocatingAttributes = null;
+        }
 
         // Copy ViewRangeVisualizer settings from preview to placed object
         var previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
@@ -156,6 +167,14 @@ public class ObjectPlacer : MonoBehaviour
 
     public void RelocateUnit(PlaceableItemInstance unit)
     {
+        // Preserve attributes before deletion
+        relocatingAttributes = new int[] {
+            unit.GetProficiency(),
+            unit.GetFatigue(),
+            unit.GetCommsClarity(),
+            unit.GetEquipment()
+        };
+        
         RemoveUnit(unit); // clean from placedUnits and update TeamList
         unit.Delete();    // destroys the GameObject
         SetRelocating(true);

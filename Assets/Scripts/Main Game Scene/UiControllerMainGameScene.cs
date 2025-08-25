@@ -13,6 +13,7 @@ public class UiControllerMainGameScene : MonoBehaviour
     public GameObject drawScrollView;
     public GameObject nextPlayerMenu;
     public TMP_InputField passphraseInputField;
+    public TextMeshProUGUI timeDisplayText;
     public GeneralSessionManager generalSessionManager;
     public bool isMenuActive = false;
     public bool isNextPlayerMenuActive = false;
@@ -158,5 +159,13 @@ public class UiControllerMainGameScene : MonoBehaviour
         resumeButton.SetActive(true);
         settingsButton.SetActive(true);
         mainMenuButton.SetActive(true);
+    }
+
+    public void UpdateTimeDisplay(string time)
+    {
+        if (timeDisplayText != null)
+        {
+            timeDisplayText.text = time;
+        }
     }
 }
