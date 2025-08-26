@@ -272,6 +272,13 @@ public class ContextMenu3D : MonoBehaviour
                     OnStartMovementPathClicked();
                 }
             }
+            
+            // Show/hide cost text based on selected action
+            var movement = target.GetComponent<UnitMovement>();
+            if (movement != null && movement.costText != null)
+            {
+                movement.costText.gameObject.SetActive(option == "Movement");
+            }
         }
     }
 
@@ -292,6 +299,11 @@ public class ContextMenu3D : MonoBehaviour
             var rotationComponent = target.GetComponent<PlaceableItemRotation>();
             if (rotationComponent != null)
                 rotationComponent.HideButtons();
+                
+            // Hide cost text when context menu is destroyed
+            var movement = target.GetComponent<UnitMovement>();
+            if (movement != null && movement.costText != null)
+                movement.costText.gameObject.SetActive(false);
         }
     }
 

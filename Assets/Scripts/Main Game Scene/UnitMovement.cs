@@ -99,10 +99,6 @@ public class UnitMovement : MonoBehaviour
         isInMovementMode = false;
         pathRenderer.positionCount = 0;
         DisplaySavedPath();
-
-        // Disable cost text when exiting movement mode
-        if (costText != null)
-            costText.gameObject.SetActive(false);
     }
 
     private float ComputePathCost(Vector3[] points)
