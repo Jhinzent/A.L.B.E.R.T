@@ -20,6 +20,7 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
     public Button loadSessionButton; // Button to load selected save
     public Button cancelButton; // Button to cancel loading
     public GeneralSessionManager generalSessionManager;
+    public EditMapGeneralManager editMapGeneralManager;
 
     public GameObject mapEditingPanel;
     public GameObject teamEditingPanel;
@@ -153,26 +154,44 @@ public class UiControllerCreateSessionGameScene : MonoBehaviour
 
     public void hitSaveButton()
     {
-        string currentLoadedSave = generalSessionManager.getLoadSaveName();
-        string currentCreatedSave = generalSessionManager.getCreateSaveName();
-        string currentGameSessionSave = generalSessionManager.getGameSessionSaveName();
+        string currentLoadedSave, currentCreatedSave, currentGameSessionSave;
+
+        if (generalSessionManager != null)
+        {
+            currentLoadedSave = generalSessionManager.getLoadSaveName();
+            currentCreatedSave = generalSessionManager.getCreateSaveName();
+            currentGameSessionSave = generalSessionManager.getGameSessionSaveName();
+        }
+        else if (editMapGeneralManager != null)
+        {
+            currentLoadedSave = editMapGeneralManager.getLoadSaveName();
+            currentCreatedSave = editMapGeneralManager.getCreateSaveName();
+            currentGameSessionSave = editMapGeneralManager.getGameSessionSaveName();
+        }
+        else
+        {
+            Debug.LogWarning("No session manager found");
+            return;
+        }
 
         if (!string.IsNullOrEmpty(currentLoadedSave))
         {
             SaveSystem.SaveSession(currentLoadedSave);
             Debug.Log($"Session saved as {currentLoadedSave}");
         }
-
-        if (!string.IsNullOrEmpty(currentCreatedSave))
+        else if (!string.IsNullOrEmpty(currentCreatedSave))
         {
             SaveSystem.SaveSession(currentCreatedSave);
             Debug.Log($"Session saved as {currentCreatedSave}");
         }
-
-        if (!string.IsNullOrEmpty(currentGameSessionSave))
+        else if (!string.IsNullOrEmpty(currentGameSessionSave))
         {
             SaveSystem.SaveSession(currentGameSessionSave);
             Debug.Log($"Session saved as {currentGameSessionSave}");
+        }
+        else
+        {
+            Debug.LogWarning("No save name found to save session");
         }
     }
 

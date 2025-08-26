@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 public class ContextMenu3D : MonoBehaviour
 {
@@ -128,6 +129,17 @@ public class ContextMenu3D : MonoBehaviour
         UpdateAttributeUI(commsClarityButtons, connectivityValue);
         UpdateAttributeUI(equipmentButtons, equipmentValue);
     }
+    
+    private System.Collections.IEnumerator ShowRotationButtonsDelayed()
+    {
+        yield return null;
+        if (target != null)
+        {
+            var rotationComponent = target.GetComponent<PlaceableItemRotation>();
+            if (rotationComponent != null)
+                rotationComponent.ShowButtons();
+        }
+    }
 
     // === Your existing methods unchanged ===
     private static readonly Color[] teamColors = new Color[]
@@ -137,6 +149,11 @@ public class ContextMenu3D : MonoBehaviour
     };
     private static readonly Color neutralColor = new Color32(255, 255, 255, 255);
     public PlaceableItemInstance Item => target;
+
+    public bool IsVisible()
+    {
+        return gameObject.activeInHierarchy;
+    }
 
     public void Init(PlaceableItemInstance targetObject)
     {
@@ -188,6 +205,9 @@ public class ContextMenu3D : MonoBehaviour
 
             // Load attributes from PlaceableItemInstance
             LoadAttributesFromTarget();
+            
+            // Show rotation buttons for this target after a frame delay
+            StartCoroutine(ShowRotationButtonsDelayed());
         }
     }
 
@@ -265,6 +285,14 @@ public class ContextMenu3D : MonoBehaviour
         {
             actionTypeRadioButton.OnOptionSelected -= OnActionOptionSelected;
         }
+        
+        // Hide rotation buttons when context menu is destroyed
+        if (target != null)
+        {
+            var rotationComponent = target.GetComponent<PlaceableItemRotation>();
+            if (rotationComponent != null)
+                rotationComponent.HideButtons();
+        }
     }
 
     public void OnRelocateClicked()
@@ -298,6 +326,21 @@ public class ContextMenu3D : MonoBehaviour
             if (movement != null)
             {
                 movement.EnterMovementMode();
+            }
+        }
+    }
+    
+    public void OnToggleViewRangeClicked()
+    {
+        if (target != null)
+        {
+            var visualizer = target.GetComponent<ViewRangeVisualizer>();
+            if (visualizer != null)
+            {
+                if (visualizer.IsRingVisible())
+                    visualizer.ClearRing();
+                else
+                    visualizer.ShowRing();
             }
         }
     }

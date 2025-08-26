@@ -28,7 +28,7 @@ public class ReportPopupGameMasterIncoming : MonoBehaviour
             teamText.text = $"Team: {team}";
 
         if (actionTypeText != null)
-            actionTypeText.text = $"Action: {actionType}";
+            actionTypeText.text = $"{actionType}";
 
         if (closeButton != null)
         {

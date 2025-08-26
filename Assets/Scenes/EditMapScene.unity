@@ -813,6 +813,7 @@ MonoBehaviour:
   loadSessionButton: {fileID: 522385231}
   cancelButton: {fileID: 2004958295}
   generalSessionManager: {fileID: 0}
+  editMapGeneralManager: {fileID: 1352418431}
   mapEditingPanel: {fileID: 1589610066}
   teamEditingPanel: {fileID: 1956078825}
   enableMapEditingButton: {fileID: 2047308529}
@@ -822,6 +823,9 @@ MonoBehaviour:
   unitScrollView: {fileID: 545138295}
   pipelineUI: {fileID: 1085065110}
   nextPlayerMenu: {fileID: 0}
+  timeInputField: {fileID: 0}
+  setTimeInputField: {fileID: 0}
+  confirmTimeButton: {fileID: 0}
 --- !u!114 &333628754
 MonoBehaviour:
   m_ObjectHideFlags: 0

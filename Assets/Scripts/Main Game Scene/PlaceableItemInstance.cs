@@ -72,7 +72,14 @@ public class PlaceableItemInstance : MonoBehaviour
 
     public void OnClicked()
     {
+        Debug.Log($"[PlaceableItemInstance] OnClicked called for {itemName}");
         ContextMenuManager.Instance.ShowContextMenu(this, transform.position);
+    }
+
+    private void OnMouseDown()
+    {
+        Debug.Log($"[PlaceableItemInstance] OnMouseDown detected for {itemName}");
+        OnClicked();
     }
 
     public void Delete()

@@ -144,7 +144,6 @@ public class GeneralSessionManager : MonoBehaviour
     public void SetGameTime(string time)
     {
         gameTime = time;
-        Debug.Log(time);
     }
 
     public string GetGameTime()
@@ -292,10 +291,10 @@ public class GeneralSessionManager : MonoBehaviour
         if (verboseLogs)
         {
             string mapName = mapTransform != null ? mapTransform.name : "Origin (0,0,0)";
-            Debug.Log($"[GSM] PositionCameraOverMap: Moving camera '{cam.name}' over map '{mapName}'");
+            /*Debug.Log($"[GSM] PositionCameraOverMap: Moving camera '{cam.name}' over map '{mapName}'");
             Debug.Log($"[GSM] Map position: {basePosition}");
             Debug.Log($"[GSM] New camera position set to: {newPos}");
-            Debug.Log($"[GSM] Camera rotation set to: {cam.transform.rotation.eulerAngles}");
+            Debug.Log($"[GSM] Camera rotation set to: {cam.transform.rotation.eulerAngles}"); */
         }
     }
 
@@ -334,6 +333,18 @@ public class GeneralSessionManager : MonoBehaviour
     public int getPlayerAmmount()
     {
         return playerAmmount;
+    }
+
+    public Camera GetActiveCamera()
+    {
+        if (currentIndex == 0)
+            return GameMasterCamera;
+        
+        int playerIndex = currentIndex - 1;
+        if (playerIndex >= 0 && playerIndex < playerCameras.Count)
+            return playerCameras[playerIndex];
+        
+        return GameMasterCamera; // fallback
     }
 
     public void setReloadFlagTrue()

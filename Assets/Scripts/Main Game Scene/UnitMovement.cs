@@ -17,11 +17,19 @@ public class UnitMovement : MonoBehaviour
     private List<Vector3> currentPath = new List<Vector3>();
     private bool isInMovementMode = false;
     private Vector3 startPosition;
+    private Quaternion initialCostTextRotation;
+    private Vector3 initialCostTextPosition;
 
     void Awake()
     {
         if (terrainManager == null)
             terrainManager = FindObjectOfType<GameMasterMapManager>();
+            
+        if (costText != null)
+        {
+            initialCostTextRotation = costText.transform.rotation;
+            initialCostTextPosition = costText.transform.position;
+        }
 
         pathRenderer = GetComponent<LineRenderer>()
                    ?? gameObject.AddComponent<LineRenderer>();
@@ -37,6 +45,12 @@ public class UnitMovement : MonoBehaviour
 
     void Update()
     {
+        if (costText != null && costText.gameObject.activeInHierarchy)
+        {
+            costText.transform.rotation = initialCostTextRotation;
+            costText.transform.position = initialCostTextPosition;
+        }
+        
         if (!isInMovementMode)
             return;
 
