@@ -4,12 +4,15 @@ using UnityEngine;
 public class PlayerMapLoader : MonoBehaviour
 {
     public GameObject terrainTilePrefab;
-    public List<Transform> mapAnchors = new List<Transform>();  // Add this
-    public Transform mapParent;  // Will be assigned automatically
+    public List<Transform> mapAnchors = new List<Transform>();
+    public List<CameraMover> playerCameraMovers = new List<CameraMover>();
+    public Transform mapParent;
     public Vector2 tableSize = new Vector2(1.75f, 1f);
     public string saveName;
     public GameMasterMapLoader gameMasterMapLoader;
     public GeneralSessionManager generalSessionManager;
+    public UnifiedMapManager unifiedMapManager;
+    public GAEAPlayerMapConverter gaeaConverter;
 
     private readonly List<List<GameObject>> playerMaps = new();
 
@@ -99,10 +102,19 @@ public class PlayerMapLoader : MonoBehaviour
 
     void BuildMapForPlayer(SaveData data, int playerIndex)
     {
-        // Debug.Log($"[PlayerMapLoader] Building 2D map for player {playerIndex} from save data...");
         mapParent = mapAnchors[playerIndex];
+        
+        // Check if GAEA map data exists and build GAEA map
+        if (data.gaeaMapData != null && !string.IsNullOrEmpty(data.gaeaMapData.imagePath) && !string.IsNullOrEmpty(data.gaeaMapData.objPath))
+        {
+            BuildGAEAMapForPlayer(data, playerIndex);
+            return;
+        }
+        
+        // Original tile-based map building
         List<ObjectData> terrainObjects = new();
 
+        /*
         foreach (ObjectData obj in data.objects)
         {
             if (System.Enum.TryParse(obj.terrainType, out PlaceableItem.TerrainType terrainType))
@@ -110,6 +122,7 @@ public class PlayerMapLoader : MonoBehaviour
                 terrainObjects.Add(obj);
             }
         }
+        */
 
         // Debug.Log($"[PlayerMapLoader] Found {terrainObjects.Count} terrain objects.");
 
@@ -211,10 +224,12 @@ public class PlayerMapLoader : MonoBehaviour
                     if (tileRenderer == null)
                         tileRenderer = tile.GetComponentInChildren<Renderer>();
 
+                    /*
                     if (tileRenderer != null)
                         tileRenderer.material.color = TerrainTypeToColor(tileData.terrainType);
                     else
                         Debug.LogWarning("[PlayerMapLoader] Renderer missing on spawned tile!");
+                    */
 
                     playerMaps[playerIndex].Add(tile);
                     tilesSpawned++;
@@ -223,6 +238,92 @@ public class PlayerMapLoader : MonoBehaviour
         }
 
         // Debug.Log($"[PlayerMapLoader] Finished building map for player {playerIndex}. Total tiles spawned: {tilesSpawned}");
+    }
+    
+    private void BuildGAEAMapForPlayer(SaveData data, int playerIndex)
+    {
+        GAEAMapData mapData = data.gaeaMapData;
+        
+        // Check if files exist
+        if (!System.IO.File.Exists(mapData.imagePath) || !System.IO.File.Exists(mapData.objPath))
+        {
+            Debug.LogError($"[PlayerMapLoader] GAEA files not found for player {playerIndex}");
+            return;
+        }
+        
+        // Load texture
+        Texture2D texture = LoadTextureFromFile(mapData.imagePath);
+        if (texture == null) return;
+        
+        // Load 3D object
+        GameObject mapObject = OBJLoader.LoadOBJFromFile(mapData.objPath);
+        if (mapObject == null) return;
+        
+        // Apply texture
+        Renderer renderer = mapObject.GetComponentInChildren<Renderer>();
+        if (renderer != null)
+        {
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.mainTexture = texture;
+            mat.SetFloat("_Glossiness", 0f);
+            renderer.material = mat;
+            
+            // Set up ground layer for player maps
+            GameObject meshObj = renderer.gameObject;
+            meshObj.layer = 3; // Use same ground layer as GameMaster
+            
+            MeshCollider collider = meshObj.GetComponent<MeshCollider>();
+            if (collider == null)
+            {
+                collider = meshObj.AddComponent<MeshCollider>();
+                MeshFilter meshFilter = meshObj.GetComponent<MeshFilter>();
+                if (meshFilter != null)
+                {
+                    collider.sharedMesh = meshFilter.mesh;
+                }
+            }
+        }
+        
+        // Position and scale for player view using assigned CameraMover
+        mapObject.transform.SetParent(mapAnchors[playerIndex]);
+        
+        // Use assigned CameraMover for this player
+        if (playerIndex < playerCameraMovers.Count && playerCameraMovers[playerIndex] != null)
+        {
+            CameraMover cameraMover = playerCameraMovers[playerIndex];
+            
+            // Calculate scale based on CameraMover constraints
+            float constraintSizeX = cameraMover.constraintPosX + cameraMover.constraintNegX;
+            float constraintSizeZ = cameraMover.constraintPosZ + cameraMover.constraintNegZ;
+            float maxConstraint = Mathf.Max(constraintSizeX, constraintSizeZ);
+            
+            // Scale map to fit within camera viewing area
+            float playerScale = maxConstraint * 3.2f; // 4x larger than previous
+            
+            mapObject.transform.localScale = Vector3.one * playerScale;
+            mapObject.transform.localPosition = Vector3.zero;
+        }
+        else
+        {
+            // Fallback scaling
+            mapObject.transform.localScale = Vector3.one * 40f;
+            mapObject.transform.localPosition = Vector3.zero;
+        }
+        
+        mapObject.name = $"GAEAMap_Player{playerIndex + 1}";
+        
+        // Add to player maps list
+        playerMaps[playerIndex].Add(mapObject);
+        
+        Debug.Log($"[PlayerMapLoader] Built GAEA map for player {playerIndex + 1} with scale: {mapObject.transform.localScale.x}");
+    }
+    
+    private Texture2D LoadTextureFromFile(string path)
+    {
+        byte[] fileData = System.IO.File.ReadAllBytes(path);
+        Texture2D texture = new Texture2D(2, 2);
+        texture.LoadImage(fileData);
+        return texture;
     }
 
     private Color TerrainTypeToColor(string terrainType)

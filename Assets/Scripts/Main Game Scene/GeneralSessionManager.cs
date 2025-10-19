@@ -70,12 +70,16 @@ public class GeneralSessionManager : MonoBehaviour
         // populate radio options
         SetPlayerOptions();
 
+        // Load player maps after session data is loaded
         LoadAllPlayerMaps();
 
         // Start in Game Master view
         currentIndex = 0;
         SwitchToIndex(0);
         reloadFlag = false;
+        
+        // Clear all view range rings after loading
+        StartCoroutine(ClearAllViewRangeRingsDelayed());
     }
 
     private void LoadSessionIfExists()
@@ -589,5 +593,21 @@ public class GeneralSessionManager : MonoBehaviour
             if (verboseLogs)
                 Debug.Log($"[GSM] ToggleAudioListener: Camera '{cam.name}' has no AudioListener component to {(enable ? "enable" : "disable")}.");
         }
+    }
+    
+    private System.Collections.IEnumerator ClearAllViewRangeRingsDelayed()
+    {
+        yield return new WaitForSeconds(0.5f); // Wait for all objects to be fully loaded
+        
+        ViewRangeVisualizer[] allVisualizers = FindObjectsOfType<ViewRangeVisualizer>();
+        foreach (var visualizer in allVisualizers)
+        {
+            if (visualizer != null)
+            {
+                visualizer.ClearRing();
+            }
+        }
+        
+        Debug.Log($"[GSM] Cleared {allVisualizers.Length} ViewRangeVisualizer rings");
     }
 }

@@ -11,6 +11,10 @@ public class GameMasterMapLoader : MonoBehaviour
     public LayerMask gameMasterMapLayer;
     private Dictionary<string, GameObject> prefabDictionary;
     public GameMasterMapManager terrainManager;
+    public UnifiedMapManager unifiedMapManager;
+    
+    // GAEA Map Loading
+    private GAEAMapData lastLoadedMapData;
 
     void Awake()
     {
@@ -25,6 +29,17 @@ public class GameMasterMapLoader : MonoBehaviour
 
     public void LoadObjectsIntoScene(SaveData saveData, Vector3? positionOffset = null)
     {
+        // Load GAEA map if present
+        LoadGAEAMap(saveData);
+        
+        // Initialize map based on save data - COMMENTED OUT FOR GAEA-ONLY
+        /*
+        if (unifiedMapManager != null)
+        {
+            unifiedMapManager.LoadMapFromSave(saveData);
+        }
+        */
+        
         List<TerrainTile> terrainTiles = new List<TerrainTile>();
         Vector3 offset = positionOffset ?? Vector3.zero;
 
@@ -32,9 +47,10 @@ public class GameMasterMapLoader : MonoBehaviour
 
         foreach (ObjectData objData in saveData.objects)
         {
-            string cleanName = objData.objectName.Replace("(Clone)", "").Replace(" Variant", "").Trim();
-
-            if (prefabDictionary.TryGetValue(cleanName, out GameObject prefab))
+            // Try multiple name variations to find the prefab
+            GameObject prefab = FindPrefabByName(objData.prefabName ?? objData.objectName);
+            
+            if (prefab != null)
             {
                 Vector3 spawnPosition = objData.position + offset;
                 GameObject newObj = Instantiate(prefab, spawnPosition, objData.rotation);
@@ -44,22 +60,34 @@ public class GameMasterMapLoader : MonoBehaviour
                 PlaceableItemInstance instance = newObj.GetComponent<PlaceableItemInstance>();
                 if (instance != null)
                 {
-                    instance.Init(prefab, objData.itemType, objData.objectGivenName);
+                    instance.Init(prefab, objData.itemType, objData.objectGivenName ?? "Object");
 
                     // Set the team for units
                     if (objData.itemType == PlaceableItem.ItemType.Unit && !string.IsNullOrEmpty(objData.team))
                     {
                         instance.setTeam(objData.team);
+                        
+                        // Load unit attributes
+                        instance.SetProficiency(objData.proficiency);
+                        instance.SetFatigue(objData.fatigue);
+                        instance.SetCommsClarity(objData.commsClarity);
+                        instance.SetEquipment(objData.equipment);
                     }
 
-                    // Add to list if it's a unit (but do NOT send directly to TeamListManager)
+                    // Ensure ViewRangeVisualizer is hidden for loaded units
                     if (objData.itemType == PlaceableItem.ItemType.Unit)
                     {
+                        var visualizer = newObj.GetComponent<ViewRangeVisualizer>();
+                        if (visualizer != null)
+                        {
+                            visualizer.ClearRing();
+                        }
                         loadedUnits.Add(instance);
                     }
                 }
 
-                // Handle TerrainTile
+                // Handle TerrainTile - COMMENTED OUT FOR GAEA-ONLY
+                /*
                 TerrainTile terrainTile = newObj.GetComponent<TerrainTile>();
                 if (terrainTile != null)
                 {
@@ -70,10 +98,11 @@ public class GameMasterMapLoader : MonoBehaviour
                     }
                     terrainTiles.Add(terrainTile);
                 }
+                */
             }
             else
             {
-                Debug.LogError($"Prefab not found in dictionary: {cleanName}");
+                Debug.LogError($"Prefab not found: {objData.prefabName ?? objData.objectName}");
             }
         }
 
@@ -101,4 +130,104 @@ public class GameMasterMapLoader : MonoBehaviour
             Debug.LogWarning("ObjectPlacer reference is not set in GameMasterMapLoader.");
         }
     }
+    
+    private GameObject FindPrefabByName(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return null;
+        
+        // Clean the name
+        string cleanName = name.Replace("(Clone)", "")
+                              .Replace(" Variant", "")
+                              .Replace(" 1", "")
+                              .Replace(" 2", "")
+                              .Replace(" 3", "")
+                              .Replace(" 4", "")
+                              .Replace(" 5", "")
+                              .Trim();
+        
+        // Try exact match first
+        if (prefabDictionary.TryGetValue(cleanName, out GameObject prefab))
+            return prefab;
+            
+        // Try original name
+        if (prefabDictionary.TryGetValue(name, out prefab))
+            return prefab;
+            
+        // Try partial matches
+        foreach (var kvp in prefabDictionary)
+        {
+            if (kvp.Key.Contains(cleanName) || cleanName.Contains(kvp.Key))
+                return kvp.Value;
+        }
+        
+        return null;
+    }
+    
+    public void LoadGAEAMap(SaveData saveData)
+    {
+        if (saveData?.gaeaMapData == null) return;
+        
+        GAEAMapData mapData = saveData.gaeaMapData;
+        lastLoadedMapData = mapData;
+        
+        if (!string.IsNullOrEmpty(mapData.imagePath) && !string.IsNullOrEmpty(mapData.objPath))
+        {
+            if (System.IO.File.Exists(mapData.imagePath) && System.IO.File.Exists(mapData.objPath))
+            {
+                LoadMapFromPaths(mapData);
+            }
+        }
+    }
+    
+    private void LoadMapFromPaths(GAEAMapData mapData)
+    {
+        // Load texture
+        Texture2D texture = LoadTextureFromFile(mapData.imagePath);
+        if (texture == null) return;
+        
+        // Load 3D object
+        GameObject mapObject = OBJLoader.LoadOBJFromFile(mapData.objPath);
+        if (mapObject == null) return;
+        
+        // Apply texture
+        Renderer renderer = mapObject.GetComponentInChildren<Renderer>();
+        if (renderer != null)
+        {
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.mainTexture = texture;
+            mat.SetFloat("_Glossiness", 0f);
+            renderer.material = mat;
+            
+            // Ensure ground setup
+            GameObject meshObj = renderer.gameObject;
+            meshObj.layer = 3;
+            
+            MeshCollider collider = meshObj.GetComponent<MeshCollider>();
+            if (collider == null)
+            {
+                collider = meshObj.AddComponent<MeshCollider>();
+                MeshFilter meshFilter = meshObj.GetComponent<MeshFilter>();
+                if (meshFilter != null)
+                {
+                    collider.sharedMesh = meshFilter.mesh;
+                }
+            }
+        }
+        
+        // Position at origin for GameSession scene
+        mapObject.transform.position = Vector3.zero;
+        mapObject.transform.localScale = mapData.mapScale;
+        mapObject.transform.localScale = mapData.mapScale;
+        mapObject.name = "GAEAMap";
+    }
+    
+    private Texture2D LoadTextureFromFile(string path)
+    {
+        byte[] fileData = System.IO.File.ReadAllBytes(path);
+        Texture2D texture = new Texture2D(2, 2);
+        texture.LoadImage(fileData);
+        return texture;
+    }
+    
+    public GAEAMapData GetLastLoadedMapData() => lastLoadedMapData;
 }

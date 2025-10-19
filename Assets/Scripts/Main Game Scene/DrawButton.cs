@@ -24,6 +24,7 @@ public class DrawColorButton : MonoBehaviour
 
     private void OnClick()
     {
-        DrawMeshFull.Instance.ActivateDrawing(color);
+        if (DrawMeshFull.Instance != null)
+            DrawMeshFull.Instance.ActivateDrawing(color);
     }
 }

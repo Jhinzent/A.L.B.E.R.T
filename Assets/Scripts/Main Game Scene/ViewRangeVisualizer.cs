@@ -92,11 +92,30 @@ public class ViewRangeVisualizer : MonoBehaviour
             }
             
             lr.positionCount = 2;
-            lr.SetPosition(0, transform.position + start);
-            lr.SetPosition(1, transform.position + end);
             
-            // Ensure LineRenderer is visible
+            // Get terrain height at start and end positions
+            Vector3 worldStart = transform.position + start;
+            Vector3 worldEnd = transform.position + end;
+            
+            float startHeight = GetTerrainHeight(worldStart);
+            float endHeight = GetTerrainHeight(worldEnd);
+            
+            // Position lines above terrain surface
+            Vector3 elevatedStart = new Vector3(worldStart.x, startHeight + 1f, worldStart.z);
+            Vector3 elevatedEnd = new Vector3(worldEnd.x, endHeight + 1f, worldEnd.z);
+            
+            lr.SetPosition(0, elevatedStart);
+            lr.SetPosition(1, elevatedEnd);
+            
+            // Ensure LineRenderer renders on top
             lr.enabled = true;
+            lr.sortingOrder = 100; // High sorting order
+            
+            // Set material to render on top of terrain
+            if (lr.material != null)
+            {
+                lr.material.renderQueue = 3000; // Transparent queue
+            }
             
             // Only log first segment to avoid spam
             if (ringSegments.Count == 0)
@@ -140,6 +159,10 @@ public class ViewRangeVisualizer : MonoBehaviour
                     Vector3 pos0 = lr.GetPosition(0) + positionDelta;
                     Vector3 pos1 = lr.GetPosition(1) + positionDelta;
                     
+                    // Update height based on new terrain position
+                    pos0.y = GetTerrainHeight(pos0) + 1f;
+                    pos1.y = GetTerrainHeight(pos1) + 1f;
+                    
                     lr.SetPosition(0, pos0);
                     lr.SetPosition(1, pos1);
                 }
@@ -161,6 +184,21 @@ public class ViewRangeVisualizer : MonoBehaviour
         {
             Debug.LogWarning($"[ViewRangeVisualizer] ALL SEGMENTS DESTROYED on {gameObject.name}!");
         }
+    }
+    
+    private float GetTerrainHeight(Vector3 worldPosition)
+    {
+        // Raycast down from high above to find terrain
+        RaycastHit hit;
+        Vector3 rayStart = new Vector3(worldPosition.x, 1000f, worldPosition.z);
+        
+        if (Physics.Raycast(rayStart, Vector3.down, out hit, Mathf.Infinity, 1 << 3)) // Layer 3 = ground
+        {
+            return hit.point.y;
+        }
+        
+        // Fallback to unit's Y position if no terrain found
+        return transform.position.y;
     }
     
     private void OnDestroy()

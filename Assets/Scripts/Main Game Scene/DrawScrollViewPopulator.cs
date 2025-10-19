@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class ColorScrollPopulator : MonoBehaviour
 {
-    [SerializeField] private Transform contentParent; // ScrollView/Viewport/Content
+    [SerializeField] private Transform[] contentParents; // ScrollView/Viewport/Content for each player
     [SerializeField] private GameObject colorButtonPrefab;
-    [SerializeField] private GameObject scrollViewRoot; // Root GameObject of the scroll view (to hide/show it)
+    [SerializeField] private GameObject[] scrollViewRoots; // Root GameObject of each scroll view
     [SerializeField] private GameObject deleteAllButtonPrefab;
 
     private Color[] colors = new Color[]
@@ -19,6 +19,14 @@ public class ColorScrollPopulator : MonoBehaviour
 
     private void Start()
     {
+        for (int i = 0; i < contentParents.Length; i++)
+        {
+            PopulateScrollView(contentParents[i], scrollViewRoots[i]);
+        }
+    }
+    
+    private void PopulateScrollView(Transform contentParent, GameObject scrollViewRoot)
+    {
         foreach (Color color in colors)
         {
             GameObject buttonGO = Instantiate(colorButtonPrefab, contentParent);
@@ -30,18 +38,21 @@ public class ColorScrollPopulator : MonoBehaviour
         Button deleteButton = deleteButtonGO.GetComponent<Button>();
         deleteButton.onClick.AddListener(() =>
         {
-            DrawMeshFull.Instance.ClearAllDrawings();
+            if (DrawMeshFull.Instance != null)
+                DrawMeshFull.Instance.ClearAllDrawings();
         });
 
         // Optional: Start with hidden scroll view
         scrollViewRoot.SetActive(false);
-        isVisible = false;
     }
 
-    public void ToggleVisibility()
+    public void ToggleVisibility(int playerIndex = 0)
     {
-        isVisible = !isVisible;
-        scrollViewRoot.SetActive(isVisible);
+        if (playerIndex < scrollViewRoots.Length)
+        {
+            isVisible = !isVisible;
+            scrollViewRoots[playerIndex].SetActive(isVisible);
+        }
     }
 
     public bool IsVisible() => isVisible;

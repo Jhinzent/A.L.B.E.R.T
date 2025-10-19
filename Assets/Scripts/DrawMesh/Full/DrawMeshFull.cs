@@ -5,18 +5,25 @@ public class DrawMeshFull : MonoBehaviour
 {
     public static DrawMeshFull Instance { get; private set; }
 
-    [SerializeField] private Material drawMaterial;
-
+    [Header("Drawing Settings")]
+    public Material drawMaterial;
+    public float thickness = 0.5f;
+    public float minDistance = 0.05f;
+    public float heightOffset = 0.01f;
+    public int smoothingSteps = 3;
+    public Texture2D drawCursor; // Assign a small icon texture in Inspector
+    
+    [Header("Treasure Map Mode")]
+    public float gapInterval = 0.1f;
+    public float gapLength = 0.05f;
+    
     private List<GameObject> drawnLines = new List<GameObject>();
     private GameObject currentDrawGO;
     private Mesh mesh;
-    private Vector3 lastPos;
-    private float thickness = 1f;
+    private List<Vector3> currentLinePoints = new List<Vector3>();
     private Color color = Color.red;
     private bool treasureMapMode = false;
     private float gapCounter = 0f;
-    private float gapInterval = 0.05f;
-    private float gapLength = 0.01f;
 
     public bool isDrawing = false;
     public bool drawingEnabled = false;
@@ -35,39 +42,33 @@ public class DrawMeshFull : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0) && drawingEnabled)
         {
-            currentDrawGO = new GameObject("LineDraw", typeof(MeshFilter), typeof(MeshRenderer));
-            currentDrawGO.GetComponent<MeshRenderer>().material = new Material(drawMaterial) { color = color };
-
-            mesh = new Mesh();
-            currentDrawGO.GetComponent<MeshFilter>().mesh = mesh;
-
-            drawnLines.Add(currentDrawGO);
-
-            lastPos = GetMouseWorldPosition();
-            isDrawing = true;
+            // Don't start drawing if clicking over UI
+            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                StartNewLine();
+            }
         }
 
         if (Input.GetMouseButton(0) && isDrawing)
         {
             Vector3 mousePos = GetMouseWorldPosition();
-            if (Vector3.Distance(mousePos, lastPos) > 0.01f)
+            if (currentLinePoints.Count == 0 || Vector3.Distance(mousePos, currentLinePoints[currentLinePoints.Count - 1]) > minDistance)
             {
-                if (!treasureMapMode || ShouldDrawSegment())
-                {
-                    AddLineSegment(mesh, lastPos, mousePos, thickness);
-                }
-                lastPos = mousePos;
+                currentLinePoints.Add(mousePos);
+                UpdateCurrentLine();
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && isDrawing)
         {
-            isDrawing = false;
+            FinishCurrentLine();
         }
 
         if (Input.GetMouseButtonDown(1))
         {
             drawingEnabled = false;
+            // Reset cursor to default
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }
 
@@ -75,6 +76,12 @@ public class DrawMeshFull : MonoBehaviour
     {
         color = col;
         drawingEnabled = true;
+        
+        // Set custom cursor
+        if (drawCursor != null && drawCursor.isReadable)
+        {
+            Cursor.SetCursor(drawCursor, Vector2.zero, CursorMode.Auto);
+        }
     }
 
     public void ClearAllDrawings()
@@ -86,16 +93,84 @@ public class DrawMeshFull : MonoBehaviour
         drawnLines.Clear();
     }
 
+    private void StartNewLine()
+    {
+        currentDrawGO = new GameObject("LineDraw", typeof(MeshFilter), typeof(MeshRenderer));
+        currentDrawGO.GetComponent<MeshRenderer>().material = new Material(drawMaterial) { color = color };
+        
+        mesh = new Mesh();
+        currentDrawGO.GetComponent<MeshFilter>().mesh = mesh;
+        
+        drawnLines.Add(currentDrawGO);
+        currentLinePoints.Clear();
+        
+        Vector3 startPos = GetMouseWorldPosition();
+        currentLinePoints.Add(startPos);
+        
+        isDrawing = true;
+        gapCounter = 0f;
+    }
+    
+    private void UpdateCurrentLine()
+    {
+        if (currentLinePoints.Count < 2) return;
+        
+        List<Vector3> smoothedPoints = SmoothLine(currentLinePoints);
+        RebuildMesh(smoothedPoints);
+    }
+    
+    private void FinishCurrentLine()
+    {
+        if (currentLinePoints.Count >= 2)
+        {
+            List<Vector3> smoothedPoints = SmoothLine(currentLinePoints);
+            RebuildMesh(smoothedPoints);
+        }
+        
+        isDrawing = false;
+        currentLinePoints.Clear();
+    }
+    
+    private List<Vector3> SmoothLine(List<Vector3> points)
+    {
+        if (points.Count < 3) return points;
+        
+        List<Vector3> smoothed = new List<Vector3>(points);
+        
+        for (int step = 0; step < smoothingSteps; step++)
+        {
+            List<Vector3> newSmoothed = new List<Vector3> { smoothed[0] };
+            
+            for (int i = 1; i < smoothed.Count - 1; i++)
+            {
+                Vector3 smoothPoint = (smoothed[i - 1] + smoothed[i] * 2f + smoothed[i + 1]) * 0.25f;
+                newSmoothed.Add(smoothPoint);
+            }
+            
+            newSmoothed.Add(smoothed[smoothed.Count - 1]);
+            smoothed = newSmoothed;
+        }
+        
+        return smoothed;
+    }
+    
     private Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, 1 << 3))
+        {
+            Vector3 point = hit.point;
+            point.y += heightOffset;
+            return point;
+        }
+        
         Plane plane = new Plane(Vector3.up, Vector3.zero);
         if (plane.Raycast(ray, out float distance))
         {
-            Vector3 point = ray.GetPoint(distance);
-            point.y += 0.005f; // 👈 Lift drawing slightly above terrain
-            return point;
+            return ray.GetPoint(distance);
         }
+        
         return Vector3.zero;
     }
 
@@ -112,49 +187,56 @@ public class DrawMeshFull : MonoBehaviour
         gapCounter = 0f;
     }
 
-    private bool ShouldDrawSegment()
+    private void RebuildMesh(List<Vector3> points)
     {
-        gapCounter += 0.01f;
-        float cyclePosition = gapCounter % (gapInterval + gapLength);
-        return cyclePosition < gapInterval;
-    }
-
-    private void AddLineSegment(Mesh mesh, Vector3 lastPos, Vector3 currentPos, float thickness)
-    {
-        List<Vector3> vertices = new List<Vector3>(mesh.vertices);
-        List<int> triangles = new List<int>(mesh.triangles);
-        List<Vector2> uv = new List<Vector2>(mesh.uv);
-
-        Vector3 forward = (currentPos - lastPos).normalized;
-        Vector3 right = Vector3.Cross(forward, Vector3.up) * thickness;
-
-        Vector3 v1 = lastPos - right;
-        Vector3 v2 = lastPos + right;
-        Vector3 v3 = currentPos + right;
-        Vector3 v4 = currentPos - right;
-
-        int baseIndex = vertices.Count;
-
-        vertices.Add(v1);
-        vertices.Add(v2);
-        vertices.Add(v3);
-        vertices.Add(v4);
-
-        uv.Add(Vector2.zero);
-        uv.Add(Vector2.zero);
-        uv.Add(Vector2.zero);
-        uv.Add(Vector2.zero);
-
-        triangles.Add(baseIndex + 0);
-        triangles.Add(baseIndex + 1);
-        triangles.Add(baseIndex + 2);
-        triangles.Add(baseIndex + 0);
-        triangles.Add(baseIndex + 2);
-        triangles.Add(baseIndex + 3);
-
+        if (points.Count < 2) return;
+        
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+        List<Vector2> uv = new List<Vector2>();
+        
+        for (int i = 0; i < points.Count - 1; i++)
+        {
+            if (treasureMapMode && !ShouldDrawSegment(i)) continue;
+            
+            Vector3 current = points[i];
+            Vector3 next = points[i + 1];
+            
+            Vector3 forward = (next - current).normalized;
+            Vector3 right = Vector3.Cross(forward, Vector3.up).normalized * thickness * 0.5f;
+            
+            int baseIndex = vertices.Count;
+            
+            vertices.Add(current - right);
+            vertices.Add(current + right);
+            vertices.Add(next + right);
+            vertices.Add(next - right);
+            
+            uv.Add(new Vector2(0, 0));
+            uv.Add(new Vector2(1, 0));
+            uv.Add(new Vector2(1, 1));
+            uv.Add(new Vector2(0, 1));
+            
+            triangles.Add(baseIndex + 0);
+            triangles.Add(baseIndex + 1);
+            triangles.Add(baseIndex + 2);
+            triangles.Add(baseIndex + 0);
+            triangles.Add(baseIndex + 2);
+            triangles.Add(baseIndex + 3);
+        }
+        
+        mesh.Clear();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.uv = uv.ToArray();
         mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+    }
+    
+    private bool ShouldDrawSegment(int segmentIndex)
+    {
+        float position = segmentIndex * minDistance;
+        float cyclePosition = position % (gapInterval + gapLength);
+        return cyclePosition < gapInterval;
     }
 }

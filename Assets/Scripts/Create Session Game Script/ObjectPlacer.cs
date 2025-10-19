@@ -161,12 +161,9 @@ public class ObjectPlacer : MonoBehaviour
             relocatingAttributes = null;
         }
 
-        // Copy ViewRangeVisualizer settings from preview to placed object
+        // Copy ViewRangeVisualizer settings from preview to placed object but don't show ring
         var previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
         var placedVisualizer = placedObject.GetComponent<ViewRangeVisualizer>();
-        
-        //Debug.Log($"Preview visualizer: {(previewVisualizer != null ? "Found" : "NULL")}");
-        // Debug.Log($"Placed visualizer: {(placedVisualizer != null ? "Found" : "NULL")}");
         
         if (placedVisualizer != null && selectedItemType == PlaceableItem.ItemType.Unit)
         {
@@ -176,8 +173,8 @@ public class ObjectPlacer : MonoBehaviour
                 placedVisualizer.radius = previewVisualizer.radius;
                 placedVisualizer.tileSize = previewVisualizer.tileSize;
             }
-            // Show ring immediately like ContextMenuManager does
-            placedVisualizer.ShowRing();
+            // Explicitly clear any existing ring on placed object
+            placedVisualizer.ClearRing();
         }
 
         // This block ensures the instance is always tracked
@@ -300,6 +297,13 @@ public class ObjectPlacer : MonoBehaviour
 
         if (previewObject != null)
         {
+            // Clear any view range ring from preview object
+            var previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
+            if (previewVisualizer != null)
+            {
+                previewVisualizer.ClearRing();
+            }
+            
             // Debug.Log($"[ObjectPlacer] EndPlacement - Destroying preview object: {previewObject.name}");
             Destroy(previewObject);
         }

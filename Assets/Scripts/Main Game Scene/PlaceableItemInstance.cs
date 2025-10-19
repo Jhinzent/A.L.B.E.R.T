@@ -90,6 +90,12 @@ public class PlaceableItemInstance : MonoBehaviour
 
     private void OnMouseDown()
     {
+        // Don't trigger context menu if clicking over UI
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+        
         Debug.Log($"[PlaceableItemInstance] OnMouseDown detected for {itemName}");
         OnClicked();
     }
