@@ -22,6 +22,10 @@ public static class OBJLoader
         List<int> triangles = new List<int>();
 
         string[] lines = File.ReadAllLines(filePath);
+        Debug.Log($"Loading OBJ file: {lines.Length} lines");
+
+        int processedFaces = 0;
+        int skippedFaces = 0;
 
         foreach (string line in lines)
         {
@@ -79,6 +83,8 @@ public static class OBJLoader
                         List<int> uvIndices = new List<int>();
                         List<int> normalIndices = new List<int>();
                         
+                        bool validFace = true;
+                        
                         for (int i = 1; i < parts.Length; i++)
                         {
                             string[] indices = parts[i].Split('/');
@@ -86,67 +92,144 @@ public static class OBJLoader
                             // Parse vertex index (required)
                             if (indices.Length > 0 && int.TryParse(indices[0], out int vIndex))
                             {
-                                vertexIndices.Add(vIndex - 1);
+                                int adjustedVIndex = vIndex - 1;
+                                if (adjustedVIndex >= 0 && adjustedVIndex < objVertices.Count)
+                                {
+                                    vertexIndices.Add(adjustedVIndex);
+                                }
+                                else
+                                {
+                                    Debug.LogWarning($"Invalid vertex index {vIndex} (adjusted: {adjustedVIndex}) - max: {objVertices.Count}");
+                                    validFace = false;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                validFace = false;
+                                break;
                             }
                             
                             // Parse UV index (optional)
                             if (indices.Length > 1 && !string.IsNullOrEmpty(indices[1]) && int.TryParse(indices[1], out int uvIndex))
                             {
-                                uvIndices.Add(uvIndex - 1);
+                                int adjustedUVIndex = uvIndex - 1;
+                                if (adjustedUVIndex >= 0 && adjustedUVIndex < objUVs.Count)
+                                {
+                                    uvIndices.Add(adjustedUVIndex);
+                                }
+                                else
+                                {
+                                    uvIndices.Add(-1); // Mark as invalid
+                                }
+                            }
+                            else
+                            {
+                                uvIndices.Add(-1);
                             }
                             
                             // Parse normal index (optional)
                             if (indices.Length > 2 && !string.IsNullOrEmpty(indices[2]) && int.TryParse(indices[2], out int nIndex))
                             {
-                                normalIndices.Add(nIndex - 1);
+                                int adjustedNIndex = nIndex - 1;
+                                if (adjustedNIndex >= 0 && adjustedNIndex < objNormals.Count)
+                                {
+                                    normalIndices.Add(adjustedNIndex);
+                                }
+                                else
+                                {
+                                    normalIndices.Add(-1); // Mark as invalid
+                                }
+                            }
+                            else
+                            {
+                                normalIndices.Add(-1);
                             }
                         }
                         
-                        // Build unified vertex/UV/normal arrays
-                        if (vertexIndices.Count == 4)
+                        if (!validFace) 
                         {
-                            // Quad - create 2 triangles with proper UV mapping
-                            int[] quadOrder = {0, 2, 1, 0, 3, 2}; // Reversed winding
-                            
-                            for (int i = 0; i < 6; i++)
-                            {
-                                int idx = quadOrder[i];
-                                vertices.Add(objVertices[vertexIndices[idx]]);
-                                
-                                if (uvIndices.Count > idx)
-                                    uvs.Add(objUVs[uvIndices[idx]]);
-                                else
-                                    uvs.Add(Vector2.zero);
-                                    
-                                if (normalIndices.Count > idx)
-                                    normals.Add(objNormals[normalIndices[idx]]);
-                                else
-                                    normals.Add(Vector3.up);
-                                    
-                                triangles.Add(vertices.Count - 1);
-                            }
+                            skippedFaces++;
+                            continue;
                         }
-                        else if (vertexIndices.Count == 3)
+                        
+                        processedFaces++;
+                        
+                        // Build unified vertex/UV/normal arrays
+                        if (vertexIndices.Count >= 3)
                         {
-                            // Triangle - reversed winding
-                            int[] triOrder = {0, 2, 1};
-                            
-                            for (int i = 0; i < 3; i++)
+                            // Handle triangles and quads (convert quads to triangles)
+                            if (vertexIndices.Count == 4)
                             {
-                                int idx = triOrder[i];
-                                vertices.Add(objVertices[vertexIndices[idx]]);
+                                // Quad - create 2 triangles with proper UV mapping
+                                int[] quadOrder = {0, 2, 1, 0, 3, 2}; // Reversed winding
                                 
-                                if (uvIndices.Count > idx)
-                                    uvs.Add(objUVs[uvIndices[idx]]);
-                                else
-                                    uvs.Add(Vector2.zero);
+                                for (int i = 0; i < 6; i++)
+                                {
+                                    int idx = quadOrder[i];
+                                    vertices.Add(objVertices[vertexIndices[idx]]);
                                     
-                                if (normalIndices.Count > idx)
-                                    normals.Add(objNormals[normalIndices[idx]]);
-                                else
-                                    normals.Add(Vector3.up);
+                                    if (idx < uvIndices.Count && uvIndices[idx] >= 0)
+                                        uvs.Add(objUVs[uvIndices[idx]]);
+                                    else
+                                        uvs.Add(Vector2.zero);
+                                        
+                                    if (idx < normalIndices.Count && normalIndices[idx] >= 0)
+                                        normals.Add(objNormals[normalIndices[idx]]);
+                                    else
+                                        normals.Add(Vector3.up);
+                                        
+                                    triangles.Add(vertices.Count - 1);
+                                }
+                            }
+                            else if (vertexIndices.Count == 3)
+                            {
+                                // Triangle - reversed winding
+                                int[] triOrder = {0, 2, 1};
+                                
+                                for (int i = 0; i < 3; i++)
+                                {
+                                    int idx = triOrder[i];
+                                    vertices.Add(objVertices[vertexIndices[idx]]);
                                     
-                                triangles.Add(vertices.Count - 1);
+                                    if (idx < uvIndices.Count && uvIndices[idx] >= 0)
+                                        uvs.Add(objUVs[uvIndices[idx]]);
+                                    else
+                                        uvs.Add(Vector2.zero);
+                                        
+                                    if (idx < normalIndices.Count && normalIndices[idx] >= 0)
+                                        normals.Add(objNormals[normalIndices[idx]]);
+                                    else
+                                        normals.Add(Vector3.up);
+                                        
+                                    triangles.Add(vertices.Count - 1);
+                                }
+                            }
+                            else
+                            {
+                                // Handle n-gons by fan triangulation
+                                for (int i = 1; i < vertexIndices.Count - 1; i++)
+                                {
+                                    int[] fanOrder = {0, i + 1, i}; // Reversed winding
+                                    
+                                    for (int j = 0; j < 3; j++)
+                                    {
+                                        int idx = fanOrder[j];
+                                        vertices.Add(objVertices[vertexIndices[idx]]);
+                                        
+                                        if (idx < uvIndices.Count && uvIndices[idx] >= 0)
+                                            uvs.Add(objUVs[uvIndices[idx]]);
+                                        else
+                                            uvs.Add(Vector2.zero);
+                                            
+                                        if (idx < normalIndices.Count && normalIndices[idx] >= 0)
+                                            normals.Add(objNormals[normalIndices[idx]]);
+                                        else
+                                            normals.Add(Vector3.up);
+                                            
+                                        triangles.Add(vertices.Count - 1);
+                                    }
+                                }
                             }
                         }
                     }
@@ -171,15 +254,42 @@ public static class OBJLoader
         Mesh mesh = new Mesh();
         mesh.name = Path.GetFileNameWithoutExtension(filePath) + "_Mesh";
         
+        // Enable 32-bit indices for large meshes
+        if (vertices.Count > 65535)
+        {
+            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            Debug.Log($"Enabled 32-bit indices for large mesh with {vertices.Count} vertices");
+        }
+        
         if (vertices.Count == 0)
         {
             Debug.LogError("No vertices found in OBJ file");
             return null;
         }
         
-        // Scaling already applied during vertex parsing to match Unity's import
+        // Check Unity's mesh vertex limit
+        if (vertices.Count > 65535)
+        {
+            Debug.LogWarning($"Mesh has {vertices.Count} vertices, exceeding Unity's 16-bit index limit (65535). This may cause rendering issues.");
+        }
         
-        mesh.vertices = vertices.ToArray();
+        // Scaling already applied during vertex parsing to match Unity's import
+        Vector3[] vertexArray = vertices.ToArray();
+        mesh.vertices = vertexArray;
+        
+        // Calculate actual bounds from vertices
+        if (vertexArray.Length > 0)
+        {
+            Vector3 min = vertexArray[0];
+            Vector3 max = vertexArray[0];
+            foreach (Vector3 v in vertexArray)
+            {
+                min = Vector3.Min(min, v);
+                max = Vector3.Max(max, v);
+            }
+            Vector3 size = max - min;
+            Debug.Log($"Actual vertex bounds: min={min}, max={max}, size={size}");
+        }
         
         // Ensure triangles array is valid
         if (triangles.Count % 3 == 0 && triangles.Count > 0)
@@ -195,6 +305,8 @@ public static class OBJLoader
         // Apply UV coordinates and normals (now properly aligned)
         mesh.uv = uvs.ToArray();
         mesh.normals = normals.ToArray();
+        Debug.Log($"OBJ parsing complete: {objVertices.Count} vertices, {objUVs.Count} UVs, {objNormals.Count} normals");
+        Debug.Log($"Final mesh: {vertices.Count} vertices, {triangles.Count/3} triangles, {processedFaces} faces processed, {skippedFaces} faces skipped");
         Debug.Log($"UV mapping applied: {uvs.Count} UV coordinates for {vertices.Count} vertices");
         // Don't recalculate normals to preserve sharp terrain edges
         mesh.RecalculateBounds();

@@ -127,13 +127,10 @@ public class PlayerReportOutputScrollViewManager : MonoBehaviour
         currentlyOpenEntry = entry;
 
         var popupScript = popupInstance.GetComponent<ReportPopupPlayerOutput>();
-        popupScript.Initialize(entry.Description, entry.ActionType);
+        popupScript.Initialize(entry);
 
         popupScript.OnDataChanged += (desc, actionType) =>
         {
-            entry.Description = desc;
-            entry.ActionType = actionType;
-
             if (entry.DisplayObject != null)
             {
                 TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
@@ -141,6 +138,18 @@ public class PlayerReportOutputScrollViewManager : MonoBehaviour
                 {
                     text.text = entry.ReportName;
                     text.color = GetTeamColor(entry.Team);
+                }
+            }
+        };
+        
+        popupScript.OnTitleChanged += (newTitle) =>
+        {
+            if (entry.DisplayObject != null)
+            {
+                TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
+                if (text != null)
+                {
+                    text.text = newTitle;
                 }
             }
         };

@@ -158,9 +158,33 @@ public class GAEAMapCreator : MonoBehaviour
     {
         if (currentGaeaObject == null) return;
         
+        // Get bounds before any scaling
         Bounds bounds = GetObjectBounds(currentGaeaObject);
+        Debug.Log($"Original bounds: center={bounds.center}, size={bounds.size}");
+        
+        // Check if bounds are too small (precision issues)
+        if (bounds.size.magnitude < 0.001f)
+        {
+            Debug.LogWarning("Bounds are extremely small, this may cause rendering issues");
+            // Use a reasonable default scale instead of extreme scaling
+            currentGaeaObject.transform.localScale = Vector3.one * 100f;
+        }
+        else
+        {
+            // Scale to larger size for tilted camera view
+            float maxDimension = Mathf.Max(bounds.size.x, bounds.size.z);
+            float targetSize = 500f; // Larger target for tilted camera
+            float scale = targetSize / maxDimension;
+            
+            // Clamp scale to reasonable range to avoid precision issues
+            scale = Mathf.Clamp(scale, 1f, 10000f);
+            
+            currentGaeaObject.transform.localScale = Vector3.one * scale;
+            Debug.Log($"Map scaled to {scale}, bounds: {bounds.size}, target size: {targetSize}");
+        }
         
         // Center the object with slight Z offset for camera view
+        bounds = GetObjectBounds(currentGaeaObject); // Recalculate after scaling
         Vector3 centerOffset = -bounds.center;
         centerOffset.z += 50f; // Move slightly into positive Z for camera
         currentGaeaObject.transform.position = centerOffset;
@@ -168,23 +192,23 @@ public class GAEAMapCreator : MonoBehaviour
         // Name the object for easy finding during save
         currentGaeaObject.name = "GAEAMap";
         
-        // Scale to larger size for tilted camera view
-        float maxDimension = Mathf.Max(bounds.size.x, bounds.size.z);
-        float targetSize = 500f; // Larger target for tilted camera
-        float scale = targetSize / maxDimension;
-        
-        // Ensure minimum scale
-        scale = Mathf.Max(scale, 20f);
-        
-        currentGaeaObject.transform.localScale = Vector3.one * scale;
-        
-        Debug.Log($"Map scaled to {scale}, bounds: {bounds.size}, target size: {targetSize}");
+        Debug.Log($"Final position: {currentGaeaObject.transform.position}, scale: {currentGaeaObject.transform.localScale}");
     }
     
     Bounds GetObjectBounds(GameObject obj)
     {
         Renderer renderer = obj.GetComponentInChildren<Renderer>();
-        return renderer != null ? renderer.bounds : new Bounds(obj.transform.position, Vector3.one);
+        if (renderer != null)
+        {
+            Bounds bounds = renderer.bounds;
+            Debug.Log($"Renderer bounds: center={bounds.center}, size={bounds.size}, extents={bounds.extents}");
+            return bounds;
+        }
+        else
+        {
+            Debug.LogWarning("No renderer found for bounds calculation");
+            return new Bounds(obj.transform.position, Vector3.one);
+        }
     }
     
     void UpdateStatus(string message)

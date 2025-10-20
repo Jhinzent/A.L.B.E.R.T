@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2e224b0a4ffb0d4cbe72c7e6b15a5fc, type: 3}
   m_Name: QueenPlayerScenePlaceableItem
   m_EditorClassIdentifier: 
-  itemName: Pawn
-  itemImage: {fileID: 21300000, guid: 77f633ef0c486724eb4e251a7ff55572, type: 3}
+  itemName: AlliedQueen
+  itemImage: {fileID: 21300000, guid: 093a6f9e889928848946abd683f69944, type: 3}
   itemPrefab: {fileID: 911963083646706995, guid: 2edf623e47704004fa322951ae727256, type: 3}
   itemType: 0
   terrainType: 0

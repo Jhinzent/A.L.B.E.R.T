@@ -193,15 +193,12 @@ public class ReportScrollViewManagerGameMasterIncoming : MonoBehaviour
         var popupScript = popupInstance.GetComponent<ReportPopupGameMasterIncoming>();
         if (popupScript != null)
         {
-            // Initialize with report data (read-only)
-            popupScript.Initialize(
-                report.Description,
-                report.Team,
-                report.ActionType
-            );
+            // Initialize with report entry
+            popupScript.Initialize(report);
 
-            // Only subscribe to close event
+            // Subscribe to events
             popupScript.OnCloseRequested += CloseCurrentPopup;
+            popupScript.OnTitleChanged += (newTitle) => UpdateReportName(report, newTitle);
         }
     }
     private void CloseCurrentPopup()

@@ -56,53 +56,82 @@ public class ObjectPlacer : MonoBehaviour
 
             if (Input.GetMouseButtonDown(0))
             {
-                // Debug.Log($"[ObjectPlacer] Left mouse button pressed - calling PlaceObject()");
-                PlaceObject();
+                // Only place if not over UI and raycast hits ground
+                bool isOverUI = EventSystem.current.IsPointerOverGameObject();
+                if (!isOverUI && CanPlaceAtCurrentPosition())
+                {
+                    PlaceObject();
+                }
             }
             if (Input.GetMouseButtonDown(1))
             {
-                // Debug.Log($"[ObjectPlacer] Right mouse button pressed - calling EndPlacement()");
                 EndPlacement();
             }
         }
     }
 
+    private bool CanPlaceAtCurrentPosition()
+    {
+        if (Camera.main == null) return false;
+        
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        return Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, groundLayer);
+    }
+
     public void SetSelectedPrefab(GameObject prefab, PlaceableItem.ItemType itemType, string existingName = null, string existingTeam = "Neutral")
     {
-        // Debug.Log($"[ObjectPlacer] === SetSelectedPrefab START === Prefab: {prefab?.name}, ItemType: {itemType}, Name: {existingName}, Team: {existingTeam}");
+        // Check if prefab is null or destroyed
+        if (prefab == null)
+        {
+            Debug.LogError($"[ObjectPlacer] SetSelectedPrefab called with null prefab!");
+            return;
+        }
 
         selectedPrefab = prefab;
         selectedItemType = itemType;
 
         if (previewObject != null)
         {
-            //Debug.Log($"[ObjectPlacer] Destroying previous preview object: {previewObject.name}");
             Destroy(previewObject);
         }
 
         previewObject = Instantiate(selectedPrefab);
-        // Debug.Log($"[ObjectPlacer] Preview object instantiated: {previewObject.name}");
+        Vector3 originalScale = previewObject.transform.localScale;
 
         Collider col = previewObject.GetComponent<Collider>();
         if (col != null)
         {
             col.enabled = false;
-            // Debug.Log("[ObjectPlacer] Disabled collider on preview object.");
         }
 
         SetMaterialTransparent(previewObject);
-        // Debug.Log("[ObjectPlacer] Applied transparent material to preview object.");
+        previewObject.transform.localScale = originalScale; // Preserve original scale
 
         isPlacing = true;
         // Debug.Log("[ObjectPlacer] isPlacing set to TRUE.");
 
-        var instance = previewObject.GetComponent<PlaceableItemInstance>() ?? previewObject.AddComponent<PlaceableItemInstance>();
-        // Debug.Log($"[ObjectPlacer] PlaceableItemInstance component: {(instance != null ? "Found/Added" : "NULL")}");
+        // Get or add PlaceableItemInstance and ensure it's properly initialized
+        var instance = previewObject.GetComponent<PlaceableItemInstance>();
+        GameObject originalPrefabBackup = null;
         
+        if (instance != null)
+        {
+            // Preserve inspector-assigned OriginalPrefab if it exists
+            originalPrefabBackup = instance.OriginalPrefab;
+            Debug.Log($"[ObjectPlacer] Existing instance found with OriginalPrefab: {originalPrefabBackup?.name}");
+        }
+        else
+        {
+            instance = previewObject.AddComponent<PlaceableItemInstance>();
+            Debug.Log($"[ObjectPlacer] Created new PlaceableItemInstance component");
+        }
+        
+        // Always use the parameter (which should be the actual prefab asset)
+        // Don't use originalPrefabBackup as it might be a clone
         instance.Init(prefab, itemType, existingName ?? "NewObject");
         instance.setTeam(existingTeam);
-        // Debug.Log($"[ObjectPlacer] Preview instance initialized - Name: {instance.getName()}, Team: {instance.getTeam()}, ItemType: {instance.ItemType}");
-        // Debug.Log($"[ObjectPlacer] === SetSelectedPrefab END === isPlacing: {isPlacing}");
+        
+        Debug.Log($"[ObjectPlacer] Preview initialized - OriginalPrefab: {instance.getOriginalPrefab()?.name}, ItemType: {instance.ItemType}, selectedPrefab: {selectedPrefab?.name}");
 
         // Show ring for units during preview
         if (itemType == PlaceableItem.ItemType.Unit)
@@ -130,26 +159,52 @@ public class ObjectPlacer : MonoBehaviour
 
     private void PlaceObject()
     {
-        if (previewObject == null || selectedPrefab == null)
+        if (previewObject == null)
         {
-            Debug.LogWarning($"[ObjectPlacer] PlaceObject failed - previewObject: {previewObject != null}, selectedPrefab: {selectedPrefab != null}");
+            Debug.LogWarning($"[ObjectPlacer] PlaceObject failed - previewObject is null");
             return;
         }
-
-        // Debug.Log($"[ObjectPlacer] PlaceObject called - placing {selectedPrefab.name} at {previewObject.transform.position}");
         
-        GameObject placedObject = Instantiate(selectedPrefab, previewObject.transform.position, previewObject.transform.rotation);
-        var previewInstance = previewObject.GetComponent<PlaceableItemInstance>();
+        // Store values before potential destruction
+        var previewComp = previewObject.GetComponent<PlaceableItemInstance>();
+        GameObject prefabToPlace = previewComp?.getOriginalPrefab() ?? selectedPrefab;
+        Vector3 previewPosition = previewObject.transform.position;
+        Quaternion previewRotation = previewObject.transform.rotation;
+        ViewRangeVisualizer previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
+        
+        if (prefabToPlace == null)
+        {
+            Debug.LogWarning($"[ObjectPlacer] PlaceObject failed - no prefab available (preview: {previewComp?.getOriginalPrefab()?.name}, selected: {selectedPrefab?.name})");
+            return;
+        }
+        
+        GameObject placedObject = Instantiate(prefabToPlace, previewPosition, previewRotation);
+        
+        // Ensure proper scale (in case preview was affected)
+        placedObject.transform.localScale = prefabToPlace.transform.localScale;
+        
+        // Temporarily disable collider to prevent premature clicks
+        Collider col = placedObject.GetComponent<Collider>();
+        if (col != null) col.enabled = false;
+        
         var instance = placedObject.GetComponent<PlaceableItemInstance>() ?? placedObject.AddComponent<PlaceableItemInstance>();
 
-        string objectName = previewInstance != null ? previewInstance.getName() : "NewObject";
-        string team = previewInstance != null ? previewInstance.getTeam() : "Neutral";
+        string objectName = previewComp != null ? previewComp.getName() : "NewObject";
+        string team = previewComp != null ? previewComp.getTeam() : "Neutral";
         
-        // Debug.Log($"[ObjectPlacer] Placed object instance: {(instance != null ? "Found/Added" : "NULL")}");
-        // Debug.Log($"[ObjectPlacer] Object details - Name: {objectName}, Team: {team}, ItemType: {selectedItemType}");
-
-        instance.Init(selectedPrefab, selectedItemType, objectName);
+        // Initialize immediately to prevent wrong context menu
+        instance.Init(prefabToPlace, selectedItemType, objectName);
         instance.setTeam(team);
+        
+        // Ensure ItemType is correctly set (double-check)
+        if (instance.ItemType != selectedItemType)
+        {
+            Debug.LogWarning($"[ObjectPlacer] ItemType mismatch detected. Setting {objectName} to {selectedItemType}");
+            instance.ItemType = selectedItemType;
+        }
+        
+        // Re-enable collider after initialization
+        if (col != null) col.enabled = true;
         
         // Apply preserved attributes if relocating
         if (isRelocating && relocatingAttributes != null)
@@ -162,12 +217,11 @@ public class ObjectPlacer : MonoBehaviour
         }
 
         // Copy ViewRangeVisualizer settings from preview to placed object but don't show ring
-        var previewVisualizer = previewObject.GetComponent<ViewRangeVisualizer>();
         var placedVisualizer = placedObject.GetComponent<ViewRangeVisualizer>();
         
         if (placedVisualizer != null && selectedItemType == PlaceableItem.ItemType.Unit)
         {
-            if (previewVisualizer != null)
+            if (previewVisualizer != null && previewObject != null)
             {
                 placedVisualizer.edgeSegmentPrefab = previewVisualizer.edgeSegmentPrefab;
                 placedVisualizer.radius = previewVisualizer.radius;
@@ -258,23 +312,11 @@ public class ObjectPlacer : MonoBehaviour
 
     private void MovePreviewToMousePosition()
     {
-        if (previewObject == null)
-        {
-            Debug.LogWarning($"[ObjectPlacer] MovePreviewToMousePosition - previewObject is null!");
-            return;
-        }
-        if (Camera.main == null)
-        {
-            Debug.LogWarning($"[ObjectPlacer] MovePreviewToMousePosition - Camera.main is null!");
-            return;
-        }
+        if (previewObject == null) return;
+        if (Camera.main == null) return;
 
         bool isOverUI = EventSystem.current.IsPointerOverGameObject();
-        if (isOverUI)
-        {
-            // Debug.Log($"[ObjectPlacer] Mouse is over UI element, skipping position update");
-            return;
-        }
+        if (isOverUI) return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, groundLayer))
@@ -283,10 +325,6 @@ public class ObjectPlacer : MonoBehaviour
             Renderer rend = previewObject.GetComponentInChildren<Renderer>(true);
             if (rend != null) position.y += rend.bounds.extents.y;
             previewObject.transform.position = position;
-        }
-        else
-        {
-            Debug.LogWarning($"[ObjectPlacer] Raycast failed to hit ground layer. LayerMask: {groundLayer.value}");
         }
     }
 

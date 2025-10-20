@@ -33,13 +33,14 @@ public class ContextMenuManager : MonoBehaviour
 
     public void ShowContextMenu(PlaceableItemInstance item, Vector3 position)
     {
-        // Debug.Log($"[ContextMenuManager] ShowContextMenu called for item: {item?.name} at position: {position}");
-        // Debug.Log($"[ContextMenuManager] Item IsUnit: {item?.IsUnit()}, ItemType: {item?.ItemType}");
+        Debug.Log($"[ContextMenuManager] ShowContextMenu called for item: {item?.name} at position: {position}");
+        Debug.Log($"[ContextMenuManager] Item IsUnit: {item?.IsUnit()}, ItemType: {item?.ItemType}");
+        Debug.Log($"[ContextMenuManager] contextMenuPrefabUnit: {contextMenuPrefabUnit?.name}, contextMenuPrefabItem: {contextMenuPrefabItem?.name}");
         
         HideContextMenu();
 
         GameObject selectedPrefab = item.IsUnit() ? contextMenuPrefabUnit : contextMenuPrefabItem;
-        // Debug.Log($"[ContextMenuManager] Selected prefab: {selectedPrefab?.name}");
+        Debug.Log($"[ContextMenuManager] Selected prefab: {selectedPrefab?.name}");
 
         if (selectedPrefab == null)
         {

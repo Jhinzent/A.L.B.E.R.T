@@ -98,7 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901e24ca301091745a2087fccdef2d16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OriginalPrefab: {fileID: 0}
+  OriginalPrefab: {fileID: 5209423678219337969}
   team: 
   proficiency: 1
   fatigue: 1

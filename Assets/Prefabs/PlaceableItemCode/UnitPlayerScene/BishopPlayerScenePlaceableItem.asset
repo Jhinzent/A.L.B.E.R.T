@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2e224b0a4ffb0d4cbe72c7e6b15a5fc, type: 3}
   m_Name: BishopPlayerScenePlaceableItem
   m_EditorClassIdentifier: 
-  itemName: Knight
-  itemImage: {fileID: 21300000, guid: e8f2e01a143236d43be3ef8017fae368, type: 3}
+  itemName: AlliedBishop
+  itemImage: {fileID: 21300000, guid: ef9d29dc08754cb4caf8d4bdbd60b7f9, type: 3}
   itemPrefab: {fileID: 647641052941686326, guid: c0602cf9e5069dd40aedb8421baa7101, type: 3}
   itemType: 0
   terrainType: 0

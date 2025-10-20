@@ -373,6 +373,9 @@ MonoBehaviour:
   - {fileID: 1764171704608115593, guid: 80d5cda980eaed74f83010479c51e7e6, type: 3}
   - {fileID: 8271005910724893233, guid: 98f56000dcc5db347bcd1e109452c4cd, type: 3}
   - {fileID: 995229475683829671, guid: ba673f5606d604448b954c88dbe99773, type: 3}
+  - {fileID: 7154217283152218834, guid: cdb3872ef49d7294180c88e54e604728, type: 3}
+  - {fileID: 7154217283152218834, guid: ed697c9c080a8324da32a9f1c5361663, type: 3}
+  - {fileID: 7154217283152218834, guid: 2bc7c9aa5a01d854dac03b07167b3263, type: 3}
   teamListManager: {fileID: 384380577}
   objectPlacer: {fileID: 734422248}
   gameMasterMapLayer:
@@ -2241,8 +2244,8 @@ MonoBehaviour:
   constraintNegZ: 250
   startZOffset: -150
   zoomSpeed: 100
-  minZoom: 100
-  maxZoom: 300
+  minZoom: 20
+  maxZoom: 400
   baseTiltX: 60
   baseTiltY: 0
   maxTiltUp: 20
@@ -7242,6 +7245,10 @@ GameObject:
   - component: {fileID: 384380581}
   - component: {fileID: 384380582}
   - component: {fileID: 384380574}
+  - component: {fileID: 384380583}
+  - component: {fileID: 384380586}
+  - component: {fileID: 384380585}
+  - component: {fileID: 384380584}
   m_Layer: 0
   m_Name: ScrollViewManagers
   m_TagString: Untagged
@@ -7301,6 +7308,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   units:
+  - {fileID: 11400000, guid: d18e695654c317847847996b04492c0e, type: 2}
+  - {fileID: 11400000, guid: fab0165bbc7d4e549b677038c2bc89c8, type: 2}
+  - {fileID: 11400000, guid: 62110f4b239b0c14b8052a3c2ab59f8b, type: 2}
   - {fileID: 11400000, guid: ecf0f276b58c20940835027058e8f691, type: 2}
   - {fileID: 11400000, guid: 5375a78d2236aa943a735ac3c04dfaaa, type: 2}
   - {fileID: 11400000, guid: faecaae8b1531a94cb47ea7f9dcf1c08, type: 2}
@@ -7504,6 +7514,142 @@ MonoBehaviour:
   reportButtonPrefab: {fileID: 6123162723042394051, guid: 81e59f8e48d255542ae195d837a5abf8, type: 3}
   reportPopupPrefab: {fileID: 6123162723042394051, guid: 4618bca0cfc3b0442a7ceab422971e96, type: 3}
   popupParent: {fileID: 1846239628}
+--- !u!114 &384380583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384380570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08b4d68837ae1484f8ca7886be9a0615, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  units:
+  - {fileID: 11400000, guid: 60e497b3ab15ba241a09ffe3b2724852, type: 2}
+  - {fileID: 11400000, guid: 276cc63e3138b40489db470aaa21681d, type: 2}
+  - {fileID: 11400000, guid: 65e6a9c687fd76a4284145ec3a694f12, type: 2}
+  - {fileID: 11400000, guid: 9620952b7e4b5bd46a8873714d5c351b, type: 2}
+  - {fileID: 11400000, guid: 291ca8c21adabde48bd6bb9cce35d5d0, type: 2}
+  - {fileID: 11400000, guid: 052260bfa88ca504d9a1a6b001ae938e, type: 2}
+  - {fileID: 11400000, guid: f5f015a1b04010f4c88ee416657600ec, type: 2}
+  - {fileID: 11400000, guid: 45a9acb2c17c2584aa5590f5f690930c, type: 2}
+  - {fileID: 11400000, guid: 93a34683e7972a741a2a6a07db62a29e, type: 2}
+  - {fileID: 11400000, guid: 8678ade4f549a2d49812a7d17a2926f9, type: 2}
+  - {fileID: 11400000, guid: 9756841d79f17a948b02504ea9ad171a, type: 2}
+  - {fileID: 11400000, guid: 3876c17bd24ba5f478f087c721c38317, type: 2}
+  - {fileID: 11400000, guid: 2c1676f518fd7f647ade8dc80e0f5ff7, type: 2}
+  - {fileID: 11400000, guid: 6b541a6a2b1a51145ab9621acd7a2d97, type: 2}
+  - {fileID: 11400000, guid: 86119b0bbb084fa409349f64ce4949e6, type: 2}
+  - {fileID: 11400000, guid: f0d08ef93424dc64d8bea1badbfadce3, type: 2}
+  - {fileID: 11400000, guid: 040bb7ad28b2f3d4489ac60517d0350e, type: 2}
+  - {fileID: 11400000, guid: d17a661a9d63f7347afc3d90e220992d, type: 2}
+  scrollViewUnitPrefab: {fileID: 1975003773567501230, guid: e390e36f884d130459c1b0f039e2f597, type: 3}
+  contentParent: {fileID: 890230939}
+  objectPlacer: {fileID: 734422248}
+--- !u!114 &384380584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384380570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08b4d68837ae1484f8ca7886be9a0615, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  units:
+  - {fileID: 11400000, guid: 60e497b3ab15ba241a09ffe3b2724852, type: 2}
+  - {fileID: 11400000, guid: 276cc63e3138b40489db470aaa21681d, type: 2}
+  - {fileID: 11400000, guid: 65e6a9c687fd76a4284145ec3a694f12, type: 2}
+  - {fileID: 11400000, guid: 9620952b7e4b5bd46a8873714d5c351b, type: 2}
+  - {fileID: 11400000, guid: 291ca8c21adabde48bd6bb9cce35d5d0, type: 2}
+  - {fileID: 11400000, guid: 052260bfa88ca504d9a1a6b001ae938e, type: 2}
+  - {fileID: 11400000, guid: f5f015a1b04010f4c88ee416657600ec, type: 2}
+  - {fileID: 11400000, guid: 45a9acb2c17c2584aa5590f5f690930c, type: 2}
+  - {fileID: 11400000, guid: 93a34683e7972a741a2a6a07db62a29e, type: 2}
+  - {fileID: 11400000, guid: 8678ade4f549a2d49812a7d17a2926f9, type: 2}
+  - {fileID: 11400000, guid: 9756841d79f17a948b02504ea9ad171a, type: 2}
+  - {fileID: 11400000, guid: 3876c17bd24ba5f478f087c721c38317, type: 2}
+  - {fileID: 11400000, guid: 2c1676f518fd7f647ade8dc80e0f5ff7, type: 2}
+  - {fileID: 11400000, guid: 6b541a6a2b1a51145ab9621acd7a2d97, type: 2}
+  - {fileID: 11400000, guid: 86119b0bbb084fa409349f64ce4949e6, type: 2}
+  - {fileID: 11400000, guid: f0d08ef93424dc64d8bea1badbfadce3, type: 2}
+  - {fileID: 11400000, guid: 040bb7ad28b2f3d4489ac60517d0350e, type: 2}
+  - {fileID: 11400000, guid: d17a661a9d63f7347afc3d90e220992d, type: 2}
+  scrollViewUnitPrefab: {fileID: 1975003773567501230, guid: e390e36f884d130459c1b0f039e2f597, type: 3}
+  contentParent: {fileID: 994472625}
+  objectPlacer: {fileID: 734422248}
+--- !u!114 &384380585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384380570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08b4d68837ae1484f8ca7886be9a0615, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  units:
+  - {fileID: 11400000, guid: 60e497b3ab15ba241a09ffe3b2724852, type: 2}
+  - {fileID: 11400000, guid: 276cc63e3138b40489db470aaa21681d, type: 2}
+  - {fileID: 11400000, guid: 65e6a9c687fd76a4284145ec3a694f12, type: 2}
+  - {fileID: 11400000, guid: 9620952b7e4b5bd46a8873714d5c351b, type: 2}
+  - {fileID: 11400000, guid: 291ca8c21adabde48bd6bb9cce35d5d0, type: 2}
+  - {fileID: 11400000, guid: 052260bfa88ca504d9a1a6b001ae938e, type: 2}
+  - {fileID: 11400000, guid: f5f015a1b04010f4c88ee416657600ec, type: 2}
+  - {fileID: 11400000, guid: 45a9acb2c17c2584aa5590f5f690930c, type: 2}
+  - {fileID: 11400000, guid: 93a34683e7972a741a2a6a07db62a29e, type: 2}
+  - {fileID: 11400000, guid: 8678ade4f549a2d49812a7d17a2926f9, type: 2}
+  - {fileID: 11400000, guid: 9756841d79f17a948b02504ea9ad171a, type: 2}
+  - {fileID: 11400000, guid: 3876c17bd24ba5f478f087c721c38317, type: 2}
+  - {fileID: 11400000, guid: 2c1676f518fd7f647ade8dc80e0f5ff7, type: 2}
+  - {fileID: 11400000, guid: 6b541a6a2b1a51145ab9621acd7a2d97, type: 2}
+  - {fileID: 11400000, guid: 86119b0bbb084fa409349f64ce4949e6, type: 2}
+  - {fileID: 11400000, guid: f0d08ef93424dc64d8bea1badbfadce3, type: 2}
+  - {fileID: 11400000, guid: 040bb7ad28b2f3d4489ac60517d0350e, type: 2}
+  - {fileID: 11400000, guid: d17a661a9d63f7347afc3d90e220992d, type: 2}
+  scrollViewUnitPrefab: {fileID: 1975003773567501230, guid: e390e36f884d130459c1b0f039e2f597, type: 3}
+  contentParent: {fileID: 2078132637}
+  objectPlacer: {fileID: 734422248}
+--- !u!114 &384380586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384380570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08b4d68837ae1484f8ca7886be9a0615, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  units:
+  - {fileID: 11400000, guid: 60e497b3ab15ba241a09ffe3b2724852, type: 2}
+  - {fileID: 11400000, guid: 276cc63e3138b40489db470aaa21681d, type: 2}
+  - {fileID: 11400000, guid: 65e6a9c687fd76a4284145ec3a694f12, type: 2}
+  - {fileID: 11400000, guid: 9620952b7e4b5bd46a8873714d5c351b, type: 2}
+  - {fileID: 11400000, guid: 291ca8c21adabde48bd6bb9cce35d5d0, type: 2}
+  - {fileID: 11400000, guid: 052260bfa88ca504d9a1a6b001ae938e, type: 2}
+  - {fileID: 11400000, guid: f5f015a1b04010f4c88ee416657600ec, type: 2}
+  - {fileID: 11400000, guid: 45a9acb2c17c2584aa5590f5f690930c, type: 2}
+  - {fileID: 11400000, guid: 93a34683e7972a741a2a6a07db62a29e, type: 2}
+  - {fileID: 11400000, guid: 8678ade4f549a2d49812a7d17a2926f9, type: 2}
+  - {fileID: 11400000, guid: 9756841d79f17a948b02504ea9ad171a, type: 2}
+  - {fileID: 11400000, guid: 3876c17bd24ba5f478f087c721c38317, type: 2}
+  - {fileID: 11400000, guid: 2c1676f518fd7f647ade8dc80e0f5ff7, type: 2}
+  - {fileID: 11400000, guid: 6b541a6a2b1a51145ab9621acd7a2d97, type: 2}
+  - {fileID: 11400000, guid: 86119b0bbb084fa409349f64ce4949e6, type: 2}
+  - {fileID: 11400000, guid: f0d08ef93424dc64d8bea1badbfadce3, type: 2}
+  - {fileID: 11400000, guid: 040bb7ad28b2f3d4489ac60517d0350e, type: 2}
+  - {fileID: 11400000, guid: d17a661a9d63f7347afc3d90e220992d, type: 2}
+  scrollViewUnitPrefab: {fileID: 1975003773567501230, guid: e390e36f884d130459c1b0f039e2f597, type: 3}
+  contentParent: {fileID: 282485035}
+  objectPlacer: {fileID: 734422248}
 --- !u!1 &385109728
 GameObject:
   m_ObjectHideFlags: 0
@@ -10725,8 +10871,8 @@ MonoBehaviour:
   constraintNegZ: 250
   startZOffset: -150
   zoomSpeed: 100
-  minZoom: 100
-  maxZoom: 300
+  minZoom: 20
+  maxZoom: 400
   baseTiltX: 60
   baseTiltY: 0
   maxTiltUp: 20
@@ -17472,8 +17618,8 @@ MonoBehaviour:
   constraintNegZ: 250
   startZOffset: -150
   zoomSpeed: 100
-  minZoom: 100
-  maxZoom: 300
+  minZoom: 20
+  maxZoom: 400
   baseTiltX: 60
   baseTiltY: 0
   maxTiltUp: 20
@@ -24039,8 +24185,8 @@ MonoBehaviour:
   constraintNegZ: 250
   startZOffset: -150
   zoomSpeed: 100
-  minZoom: 100
-  maxZoom: 500
+  minZoom: 20
+  maxZoom: 400
   baseTiltX: 75
   baseTiltY: 0
   maxTiltUp: 20
@@ -35756,8 +35902,8 @@ MonoBehaviour:
   constraintNegZ: 250
   startZOffset: -150
   zoomSpeed: 100
-  minZoom: 100
-  maxZoom: 300
+  minZoom: 20
+  maxZoom: 400
   baseTiltX: 60
   baseTiltY: 0
   maxTiltUp: 20

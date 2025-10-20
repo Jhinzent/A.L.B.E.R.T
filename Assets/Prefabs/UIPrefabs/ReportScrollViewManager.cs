@@ -99,14 +99,10 @@ public class ReportScrollViewManager : MonoBehaviour
         currentlyOpenEntry = entry;
 
         var popupScript = popupInstance.GetComponent<ReportPopupGameMaster>();
-        popupScript.Initialize(entry.Description, entry.Team, entry.ActionType);
+        popupScript.Initialize(entry);
 
         popupScript.OnDataChanged += (desc, team, actionType) =>
         {
-            entry.Description = desc;
-            entry.Team = team;
-            entry.ActionType = actionType;
-
             if (entry.DisplayObject != null)
             {
                 TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
@@ -114,6 +110,18 @@ public class ReportScrollViewManager : MonoBehaviour
                 {
                     text.text = entry.ReportName;
                     text.color = GetTeamColor(team);
+                }
+            }
+        };
+        
+        popupScript.OnTitleChanged += (newTitle) =>
+        {
+            if (entry.DisplayObject != null)
+            {
+                TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
+                if (text != null)
+                {
+                    text.text = newTitle;
                 }
             }
         };

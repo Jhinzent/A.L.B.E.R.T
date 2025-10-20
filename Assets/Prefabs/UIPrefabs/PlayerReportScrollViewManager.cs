@@ -103,10 +103,21 @@ public class PlayerReportScrollViewManager : MonoBehaviour
         if (popupScript != null)
         {
             // Debug.Log("[PlayerManager] Initializing ReportPopupPlayer...");
-            popupScript.Initialize(entry.Description, entry.ActionType);
+            popupScript.Initialize(entry);
 
-            // Subscribe to the close event
+            // Subscribe to events
             popupScript.OnCloseRequested += CloseCurrentPopup;
+            popupScript.OnTitleChanged += (newTitle) =>
+            {
+                if (entry.DisplayObject != null)
+                {
+                    TMP_Text text = entry.DisplayObject.GetComponentInChildren<TMP_Text>();
+                    if (text != null)
+                    {
+                        text.text = newTitle;
+                    }
+                }
+            };
         }
         else
         {

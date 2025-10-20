@@ -14,7 +14,7 @@ public class PlaceableItemInstance : MonoBehaviour
 
     private string itemName;
 
-    public PlaceableItem.ItemType ItemType { get; private set; }
+    public PlaceableItem.ItemType ItemType { get; set; }
     public event System.Action<PlaceableItemInstance> OnDestroyed;
     private GameObject teamIndicator;
     private TextMeshPro nameText;
@@ -43,6 +43,14 @@ public class PlaceableItemInstance : MonoBehaviour
         equipment = 1;
 
         itemName = initName;
+        
+        // Force correct scale from original prefab
+        if (prefab != null)
+        {
+            transform.localScale = prefab.transform.localScale;
+        }
+        
+        Debug.Log($"[PlaceableItemInstance] Init called for {initName} with ItemType: {type}, OriginalPrefab: {prefab?.name}");
 
         CreateTeamIndicator();
     }
@@ -79,7 +87,10 @@ public class PlaceableItemInstance : MonoBehaviour
     }
     public string getName() => itemName;
     public GameObject getOriginalPrefab() => OriginalPrefab;
-    public bool IsUnit() => ItemType == PlaceableItem.ItemType.Unit;
+    public bool IsUnit() 
+    {
+        return ItemType == PlaceableItem.ItemType.Unit;
+    }
     public bool IsObject() => ItemType == PlaceableItem.ItemType.Object;
 
     public void OnClicked()

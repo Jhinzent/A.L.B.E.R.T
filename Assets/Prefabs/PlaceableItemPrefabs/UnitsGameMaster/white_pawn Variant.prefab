@@ -312,6 +312,10 @@ PrefabInstance:
       propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4449680268773888273, guid: 0f934222f3e4ab846b2db7fab165bc7b, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 9223c2636f976794f81b11c3a0200ce7, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -352,7 +356,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901e24ca301091745a2087fccdef2d16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OriginalPrefab: {fileID: 1166744362946434813, guid: 0f934222f3e4ab846b2db7fab165bc7b, type: 3}
+  OriginalPrefab: {fileID: 6019200728095071116}
   team: 
   proficiency: 1
   fatigue: 1

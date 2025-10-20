@@ -104,8 +104,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901e24ca301091745a2087fccdef2d16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OriginalPrefab: {fileID: 3319173084322187111, guid: a296a30de97789241ae4883a630d8a18, type: 3}
+  OriginalPrefab: {fileID: 7039079919600172060}
   team: 
+  proficiency: 1
+  fatigue: 1
+  commsClarity: 1
+  equipment: 1
 --- !u!65 &-7087378347182415048
 BoxCollider:
   m_ObjectHideFlags: 0

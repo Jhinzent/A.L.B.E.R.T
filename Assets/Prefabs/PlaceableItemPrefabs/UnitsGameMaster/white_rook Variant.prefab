@@ -256,6 +256,10 @@ PrefabInstance:
       propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1713700749091021805, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 9223c2636f976794f81b11c3a0200ce7, type: 2}
     - target: {fileID: 8184988844831251215, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
       propertyPath: m_LocalScale.x
       value: 10
@@ -357,7 +361,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901e24ca301091745a2087fccdef2d16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OriginalPrefab: {fileID: 343682099782220849, guid: 8c6cfb36b0d16f24fbac0a3cc3374303, type: 3}
+  OriginalPrefab: {fileID: 6337413526508168103}
   team: 
   proficiency: 1
   fatigue: 1

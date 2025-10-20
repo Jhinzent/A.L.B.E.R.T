@@ -1507,6 +1507,9 @@ MonoBehaviour:
   - {fileID: 1764171704608115593, guid: 80d5cda980eaed74f83010479c51e7e6, type: 3}
   - {fileID: 8271005910724893233, guid: 98f56000dcc5db347bcd1e109452c4cd, type: 3}
   - {fileID: 995229475683829671, guid: ba673f5606d604448b954c88dbe99773, type: 3}
+  - {fileID: 7154217283152218834, guid: cdb3872ef49d7294180c88e54e604728, type: 3}
+  - {fileID: 7154217283152218834, guid: ed697c9c080a8324da32a9f1c5361663, type: 3}
+  - {fileID: 7154217283152218834, guid: 2bc7c9aa5a01d854dac03b07167b3263, type: 3}
   teamListManager: {fileID: 959940917}
   objectPlacer: {fileID: 2073197828}
   gameMasterMapLayer:
@@ -4491,6 +4494,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   units:
+  - {fileID: 11400000, guid: 62110f4b239b0c14b8052a3c2ab59f8b, type: 2}
+  - {fileID: 11400000, guid: fab0165bbc7d4e549b677038c2bc89c8, type: 2}
+  - {fileID: 11400000, guid: d18e695654c317847847996b04492c0e, type: 2}
   - {fileID: 11400000, guid: ecf0f276b58c20940835027058e8f691, type: 2}
   - {fileID: 11400000, guid: 5375a78d2236aa943a735ac3c04dfaaa, type: 2}
   - {fileID: 11400000, guid: ec0685d60227f904491226849d3ffe24, type: 2}
